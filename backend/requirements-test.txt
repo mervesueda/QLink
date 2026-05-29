@@ -1,0 +1,10 @@
+# Test bağımlılıkları (production image'a dahil edilmez)
+pytest==8.2.0
+pytest-cov==5.0.0
+pytest-asyncio==0.23.6
+httpx==0.27.0           # FastAPI TestClient için
+testcontainers==4.5.1   # Gerçek PostgreSQL container'ı
+factory-boy==3.3.0      # Test verisi üretimi
+faker==25.0.0           # Sahte veri üretimi
+moto[s3]==5.0.7         # Unit testlerde S3 mock
+ruff==0.4.4             # Lint

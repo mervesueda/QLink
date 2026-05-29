@@ -1,0 +1,16 @@
+# monitoring/grafana/provisioning/dashboards/dashboard.yml
+# Grafana'ya dashboard'ların nerede olduğunu ve nasıl yükleneceğini söyler.
+
+apiVersion: 1
+
+providers:
+  - name: QLink Dashboards
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      # Dashboard JSON dosyalarının bulunduğu dizin
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

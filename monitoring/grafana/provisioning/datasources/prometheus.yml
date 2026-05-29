@@ -1,0 +1,14 @@
+# monitoring/grafana/provisioning/datasources/prometheus.yml
+# Grafana başladığında bu dosyayı okuyarak Prometheus data source'unu otomatik ekler.
+# Manuel "Add data source" adımına gerek kalmaz.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # docker-compose ağında prometheus servis adı
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false

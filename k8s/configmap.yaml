@@ -1,0 +1,32 @@
+# k8s/configmap.yaml – Uygulama konfigürasyonu (gizli olmayan değerler).
+#
+# Hassas veriler (şifre, secret key) gerçek projede Secret objesi olmalıdır.
+# Burada demo kolaylığı için ConfigMap kullanıldı; üretimde ayırt et.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qlink-config
+  namespace: default
+  labels:
+    app: qlink
+data:
+  # Veritabanı bağlantısı (postgres service adı)
+  DATABASE_URL: "postgresql://qlink:qlink@qlink-postgres:5432/qlink"
+
+  # LocalStack S3 (localstack service adı)
+  AWS_ENDPOINT_URL: "http://qlink-localstack:4566"
+  AWS_BUCKET_NAME: "qlink-qrcodes"
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: "test"
+  AWS_SECRET_ACCESS_KEY: "test"
+
+  # JWT (üretimde Secret kullan)
+  SECRET_KEY: "minikube-dev-secret-change-in-production"
+
+  # OpenTelemetry
+  OTEL_ENABLED: "false"
+  OTEL_SERVICE_NAME: "qlink-backend"
+
+  # Uygulama
+  DEBUG: "false"

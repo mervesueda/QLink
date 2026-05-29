@@ -1,0 +1,27 @@
+# monitoring/prometheus.yml – Prometheus scrape konfigürasyonu.
+#
+# Prometheus bu dosyayı okuyarak hangi hedefleri izleyeceğini öğrenir.
+# backend servisi /metrics endpoint'i Prometheus formatında metrik sağlar.
+
+global:
+  scrape_interval: 15s       # Her 15 saniyede bir metrik topla
+  evaluation_interval: 15s   # Kural değerlendirme aralığı
+
+scrape_configs:
+
+  # ── QLink Backend ──────────────────────────────────────────────────────────
+  - job_name: 'qlink-backend'
+    # docker-compose servis adı veya K8s service adı
+    static_configs:
+      - targets: ['backend:8000']
+        labels:
+          service: 'qlink-backend'
+          environment: 'local'
+    # /metrics endpoint'ini scrape et
+    metrics_path: '/metrics'
+    scrape_interval: 10s    # Backend için daha sık topla
+
+  # ── Prometheus'un kendisi ───────────────────────────────────────────────────
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,0 +1,57 @@
+# argocd/application.yaml – ArgoCD GitOps Application tanımı.
+#
+# ArgoCD bu manifest'i okuyarak QLink'i Git repository'sinden
+# otomatik olarak Kubernetes'e deploy eder.
+# Git'te değişiklik → ArgoCD algılar → otomatik sync.
+#
+# Kurulum:
+#   kubectl apply -f argocd/application.yaml
+#   argocd app sync qlink
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qlink
+  namespace: argocd             # ArgoCD'nin kurulu olduğu namespace
+  labels:
+    project: qlink
+  # ArgoCD sildiğinde kaynakları da sil
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  # ── Kaynak: Git repository ──────────────────────────────────
+  source:
+    repoURL: https://github.com/mervesueda/QLink
+    targetRevision: main
+    # Helm chart kullan (k8s/ yerine helm/ tercih)
+    path: helm/qlink
+    helm:
+      releaseName: qlink
+      values: |
+        backend:
+          image:
+            tag: latest
+        frontend:
+          image:
+            tag: latest
+
+  # ── Hedef: Kubernetes cluster ───────────────────────────────
+  destination:
+    server: https://kubernetes.default.svc  # Aynı cluster'da deploy
+    namespace: default
+
+  # ── Sync politikası ─────────────────────────────────────────
+  syncPolicy:
+    automated:
+      prune: true        # Git'ten silinen kaynakları K8s'ten de sil
+      selfHeal: true     # Manuel değişiklikleri Git'e döndür
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

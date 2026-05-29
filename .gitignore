@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+
+# Ortam değişkenleri (hassas veriler)
+.env
+backend/.env
+frontend/.env
+
+# Node.js
+node_modules/
+frontend/dist/
+frontend/.playwright/
+playwright-report/
+test-results/
+
+# Docker
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test çıktıları
+newman-results.json
+k6-results.json
+
+# Grafana data (yerel)
+monitoring/grafana/data/

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.backends.legacy:build"
+
+[tool.pytest.ini_options]
+# Test discovery: tests/ klasöründeki test_*.py dosyaları
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+# asyncio desteği (gerekirse)
+asyncio_mode = "auto"
+# Test çalışırken uyarıları göster
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+# Hangi kaynak kodu ölçülecek
+source = ["app"]
+# Testlerin kendisini ve conftest'i hariç tut
+omit = [
+    "tests/*",
+    "app/db/migrations/*",
+]
+
+[tool.coverage.report]
+# %70 altında olursa CI/CD başarısız sayılır
+fail_under = 70
+show_missing = true
+skip_covered = false
+
+[tool.ruff]
+# Python lint aracı: PEP8 + daha fazlası
+line-length = 100
+target-version = "py312"
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]

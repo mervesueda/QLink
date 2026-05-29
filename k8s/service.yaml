@@ -1,0 +1,75 @@
+# k8s/service.yaml – Her deployment için Kubernetes Service tanımları.
+#
+# Backend: ClusterIP (cluster içi erişim)
+# Frontend: NodePort (minikube service ile dışarıdan erişim)
+# PostgreSQL: ClusterIP (sadece backend erişmeli)
+# LocalStack: ClusterIP (sadece backend erişmeli)
+
+---
+# ── Backend Service ─────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: qlink-backend
+  namespace: default
+  labels:
+    app: qlink-backend
+spec:
+  selector:
+    app: qlink-backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+# ── Frontend Service ────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: qlink-frontend
+  namespace: default
+  labels:
+    app: qlink-frontend
+spec:
+  selector:
+    app: qlink-frontend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30000      # Sabit port: minikube service qlink-frontend ile erişilir
+  type: NodePort
+
+---
+# ── PostgreSQL Service ──────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: qlink-postgres
+  namespace: default
+spec:
+  selector:
+    app: qlink-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+# ── LocalStack Service ──────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: qlink-localstack
+  namespace: default
+spec:
+  selector:
+    app: qlink-localstack
+  ports:
+    - port: 4566
+      targetPort: 4566
+  type: ClusterIP

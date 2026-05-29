@@ -1,0 +1,172 @@
+# k8s/deployment.yaml – Backend, Frontend, PostgreSQL ve LocalStack deployment'ları.
+#
+# Minikube için resource limit'ler düşük tutulmuştur.
+# Üretimde replica count ve resource limits artırılmalıdır.
+
+---
+# ── Backend Deployment ──────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qlink-backend
+  namespace: default
+  labels:
+    app: qlink-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qlink-backend
+  template:
+    metadata:
+      labels:
+        app: qlink-backend
+      annotations:
+        # Prometheus bu annotation'ı okuyarak /metrics'i scrape eder
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: backend
+          image: qlink-backend:latest    # Minikube'de: eval $(minikube docker-env) && docker build
+          imagePullPolicy: IfNotPresent  # Yerel image kullan, registry'den çekme
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: qlink-config
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# ── Frontend Deployment ─────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qlink-frontend
+  namespace: default
+  labels:
+    app: qlink-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qlink-frontend
+  template:
+    metadata:
+      labels:
+        app: qlink-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: qlink-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+
+---
+# ── PostgreSQL Deployment ───────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qlink-postgres
+  namespace: default
+  labels:
+    app: qlink-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qlink-postgres
+  template:
+    metadata:
+      labels:
+        app: qlink-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "qlink"
+            - name: POSTGRES_PASSWORD
+              value: "qlink"
+            - name: POSTGRES_DB
+              value: "qlink"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: postgres-storage
+          emptyDir: {}   # Minikube demo; üretimde PersistentVolumeClaim kullan
+
+---
+# ── LocalStack Deployment ───────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qlink-localstack
+  namespace: default
+  labels:
+    app: qlink-localstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qlink-localstack
+  template:
+    metadata:
+      labels:
+        app: qlink-localstack
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:3.4
+          ports:
+            - containerPort: 4566
+          env:
+            - name: SERVICES
+              value: "s3"
+            - name: DEBUG
+              value: "0"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

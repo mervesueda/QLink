@@ -1,0 +1,22 @@
+/* Auth.module.css – Login ve Register sayfaları için ortak stiller */
+
+.wrapper {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.header h1 { margin-bottom: 6px; }
+
+.form { display: flex; flex-direction: column; gap: 18px; }
+
+.switchLink {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.switchLink a { color: #c4b5fd; }
+.switchLink a:hover { text-decoration: underline; }

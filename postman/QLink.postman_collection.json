@@ -1,0 +1,141 @@
+{
+  "info": {
+    "name": "QLink API",
+    "description": "QLink Cloud-Native QR Code Management Platform – API Test Collection\nNewman ile CI/CD içinde çalıştırılır.\n\nKullanım:\n  newman run postman/QLink.postman_collection.json --env-var BASE_URL=http://localhost:8000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "qr_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{BASE_URL}}/auth/register", "host": ["{{BASE_URL}}"], "path": ["auth", "register"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newman_{{$timestamp}}@test.com\",\n  \"password\": \"Newman123!\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Has email field', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('email');",
+              "  pm.collectionVariables.set('test_email', body.email);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": { "raw": "{{BASE_URL}}/auth/login", "host": ["{{BASE_URL}}"], "path": ["auth", "login"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"Newman123!\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Has access_token', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('access_token');",
+              "  pm.collectionVariables.set('token', body.access_token);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Create QR",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": { "raw": "{{BASE_URL}}/qr/create", "host": ["{{BASE_URL}}"], "path": ["qr", "create"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"https://qlink.example.com\",\n  \"qr_type\": \"url\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "pm.test('Has file_url', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('file_url');",
+              "  pm.expect(body).to.have.property('id');",
+              "  pm.collectionVariables.set('qr_id', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. List QR Codes",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{BASE_URL}}/qr/list", "host": ["{{BASE_URL}}"], "path": ["qr", "list"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Returns array', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.be.an('array');",
+              "  pm.expect(body.length).to.be.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Delete QR Code",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{BASE_URL}}/qr/{{qr_id}}", "host": ["{{BASE_URL}}"], "path": ["qr", "{{qr_id}}"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

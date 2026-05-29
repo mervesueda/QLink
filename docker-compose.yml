@@ -1,0 +1,153 @@
+# docker-compose.yml – QLink tüm servislerini tek komutla ayağa kaldırır.
+#
+# Servisler:
+#   postgres   → Veritabanı
+#   localstack → AWS S3 emülatörü
+#   backend    → FastAPI uygulaması
+#   frontend   → React (nginx)
+#   prometheus → Metrik toplama
+#   grafana    → Dashboard görselleştirme
+#   jaeger     → Distributed tracing (OTel Bonus)
+#
+# Başlatmak için: docker-compose up --build
+# Arka planda:    docker-compose up -d --build
+
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: qlink-postgres
+    environment:
+      POSTGRES_USER: qlink
+      POSTGRES_PASSWORD: qlink
+      POSTGRES_DB: qlink
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qlink -d qlink"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── LocalStack (S3) ─────────────────────────────────────────
+  localstack:
+    image: localstack/localstack:3.4
+    container_name: qlink-localstack
+    environment:
+      SERVICES: s3            # Sadece S3 aktif; diğer AWS servisleri başlatılmaz
+      DEBUG: 0
+      DEFAULT_REGION: us-east-1
+      LOCALSTACK_HOST: localstack
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ── FastAPI Backend ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qlink-backend
+    environment:
+      DATABASE_URL: postgresql://qlink:qlink@postgres:5432/qlink
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_BUCKET_NAME: qlink-qrcodes
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      SECRET_KEY: local-dev-secret-change-in-production
+      DEBUG: "false"
+      # OpenTelemetry Bonus: aktif etmek için "true" yap
+      OTEL_ENABLED: "false"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_SERVICE_NAME: qlink-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── React Frontend ──────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: qlink-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── Prometheus ──────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: qlink-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── Grafana ─────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.3
+    container_name: qlink-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # ── Jaeger (OTel Bonus) ─────────────────────────────────────
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: qlink-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  localstack_data:
+  grafana_data:
+
+networks:
+  default:
+    name: qlink-network

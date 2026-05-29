@@ -1,0 +1,18 @@
+{{/* helm/qlink/templates/configmap.yaml */}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+data:
+  DATABASE_URL: "postgresql://{{ .Values.postgres.credentials.user }}:{{ .Values.postgres.credentials.password }}@{{ .Release.Name }}-postgres:5432/{{ .Values.postgres.credentials.database }}"
+  AWS_ENDPOINT_URL: "http://{{ .Release.Name }}-localstack:4566"
+  AWS_BUCKET_NAME: {{ .Values.config.s3BucketName | quote }}
+  AWS_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: "test"
+  AWS_SECRET_ACCESS_KEY: "test"
+  SECRET_KEY: {{ .Values.config.secretKey | quote }}
+  OTEL_ENABLED: {{ .Values.config.otelEnabled | quote }}
+  DEBUG: "false"

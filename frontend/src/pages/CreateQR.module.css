@@ -1,0 +1,85 @@
+/* CreateQR.module.css */
+
+.wrapper {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.header h1 { margin-bottom: 8px; }
+
+/* Form */
+.form { display: flex; flex-direction: column; gap: 20px; }
+
+/* Tip seçici */
+.typeSelector {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-elevated);
+  padding: 4px;
+  border-radius: var(--radius-md);
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+.typeBtn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.typeActive { background: var(--bg-base) !important; color: var(--text-primary) !important; box-shadow: var(--shadow-sm); }
+
+/* Sonuç */
+.result { display: flex; flex-direction: column; gap: 20px; }
+
+.qrCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.qrImage {
+  width: 220px;
+  height: 220px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.qrMeta { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+.qrContent {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qrActions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Kaydet kartı */
+.saveCard {
+  text-align: center;
+  background: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(79,70,229,0.06));
+  border-color: var(--border-accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.saveCardIcon { font-size: 2rem; }
+.saveCard h3 { margin-bottom: 4px; }
+
+.saveCard .flex { justify-content: center; flex-wrap: wrap; }

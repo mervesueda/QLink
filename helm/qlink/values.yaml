@@ -1,0 +1,64 @@
+# helm/qlink/values.yaml
+# Helm template'lerinde kullanılan varsayılan değerler.
+# `helm install qlink ./helm/qlink --set backend.image.tag=v1.1` ile override edilebilir.
+
+# ── Backend ─────────────────────────────────────────────────────────────────
+backend:
+  image:
+    repository: qlink-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# ── Frontend ─────────────────────────────────────────────────────────────────
+frontend:
+  image:
+    repository: qlink-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30000
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+
+# ── PostgreSQL ───────────────────────────────────────────────────────────────
+postgres:
+  image:
+    repository: postgres
+    tag: "15-alpine"
+  credentials:
+    user: qlink
+    password: qlink
+    database: qlink
+
+# ── LocalStack ───────────────────────────────────────────────────────────────
+localstack:
+  image:
+    repository: localstack/localstack
+    tag: "3.4"
+  services: s3
+
+# ── Uygulama Konfigürasyonu ──────────────────────────────────────────────────
+config:
+  secretKey: "helm-deploy-change-this-in-production"
+  jwtExpireMinutes: 60
+  s3BucketName: qlink-qrcodes
+  otelEnabled: false

@@ -1,0 +1,16 @@
+# helm/qlink/Chart.yaml
+# Helm chart metadata. `helm install qlink ./helm/qlink` ile kurulur.
+
+apiVersion: v2
+name: qlink
+description: Cloud-Native QR Code Management Platform
+type: application
+version: "0.1.0"          # Chart sürümü
+appVersion: "1.0.0"       # Uygulama sürümü
+keywords:
+  - qrcode
+  - cloud-native
+  - fastapi
+home: https://github.com/mervesueda/QLink
+maintainers:
+  - name: QLink Team
