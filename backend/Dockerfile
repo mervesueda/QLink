@@ -21,9 +21,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Sadece çalışma zamanı kütüphanesi (libpq)
+# Çalışma zamanı kütüphaneleri + healthcheck için curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Builder aşamasında kurulan paketleri kopyala
