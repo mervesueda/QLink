@@ -94,6 +94,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: qlink-frontend
+    environment:
+      # nginx.conf.template içindeki ${BACKEND_HOST} bu değerle değiştirilir.
+      # Docker Compose'da backend servis adı 'backend'dir.
+      BACKEND_HOST: backend
     ports:
       - "3000:80"
     depends_on:

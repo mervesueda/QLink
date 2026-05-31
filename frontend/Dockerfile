@@ -17,12 +17,18 @@ RUN npm run build
 # Statik dosyaları nginx ile sun; Node.js çalışma zamanı gerekmez
 FROM nginx:1.25-alpine
 
-# Özel nginx konfigürasyonu: SPA routing için gerekli
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# nginx.conf'u şablon olarak kopyala (BACKEND_HOST değişkeni runtime'da çözülür)
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Özel entrypoint: sadece ${BACKEND_HOST}'u değiştirir,
+# nginx'in kendi $değişkenlerini ($host, $remote_addr vb.) bozmaz
+COPY docker-entrypoint-nginx.sh /docker-entrypoint-nginx.sh
+RUN chmod +x /docker-entrypoint-nginx.sh
 
 # Builder'dan derlenmiş dosyaları kopyala
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Özel entrypoint: envsubst çalıştırır, ardından nginx başlatr
+ENTRYPOINT ["/docker-entrypoint-nginx.sh"]

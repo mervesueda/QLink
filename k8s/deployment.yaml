@@ -81,6 +81,11 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
+          env:
+            # nginx.conf.template içindeki ${BACKEND_HOST} bu değerle çözülür.
+            # Kubernetes'te frontend servisi 'qlink-backend' adıyla ulaşır.
+            - name: BACKEND_HOST
+              value: "qlink-backend"
           resources:
             requests:
               memory: "64Mi"

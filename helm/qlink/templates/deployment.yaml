@@ -60,5 +60,10 @@ spec:
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - containerPort: 80
+          env:
+            # nginx şablonundaki ${BACKEND_HOST} bu değerle çözülür.
+            # Helm release adı 'qlink' ise backend servisi 'qlink-backend'dir.
+            - name: BACKEND_HOST
+              value: "{{ .Release.Name }}-backend"
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
