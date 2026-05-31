@@ -12,7 +12,8 @@ Misafir kullanıcılar QR oluşturabilir fakat DB'ye kaydedilmez.
 import base64
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user, get_current_user_optional
@@ -97,7 +98,6 @@ def create_qr(
     )
 
 
-
 @router.get(
     "/list",
     response_model=list[QRResponse],
@@ -126,6 +126,39 @@ def list_qr(
         )
         for qr in qr_codes
     ]
+
+
+@router.get(
+    "/{qr_id}/image",
+    summary="QR görselini doğrudan sun (auth zorunlu)",
+    response_class=Response,
+)
+def get_qr_image(
+    qr_id: str,
+    download: bool = Query(default=False, description="True ise tarayıcı dosyayı indirir"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    QR kodunu PNG olarak yeniden üretip doğrudan HTTP yanıtı olarak döner.
+    Böylece tarayıcı LocalStack S3 URL'sine erişmek zorunda kalmaz.
+    ?download=true → Content-Disposition: attachment → tarayıcı indirir.
+    """
+    qr_code = (
+        db.query(QRCode)
+        .filter(QRCode.id == qr_id, QRCode.user_id == current_user.id)
+        .first()
+    )
+    if not qr_code:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="QR bulunamadı")
+
+    png_bytes = generate_qr_png(qr_code.content)
+    disposition = f'attachment; filename="qlink-{qr_id}.png"' if download else "inline"
+    return Response(
+        content=png_bytes,
+        media_type="image/png",
+        headers={"Content-Disposition": disposition},
+    )
 
 
 @router.get(

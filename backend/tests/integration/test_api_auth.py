@@ -5,7 +5,6 @@ Testcontainers PostgreSQL'i üzerinde gerçek HTTP istekleri gönderilir.
 S3 mock'lanır (conftest.py'deki mock_s3 fixture).
 """
 
-import pytest
 
 
 class TestRegister:

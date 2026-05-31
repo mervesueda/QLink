@@ -5,7 +5,6 @@ Hem misafir hem kayıtlı kullanıcı senaryolarını kapsar.
 S3 monkeypatch ile mock'lanır; sadece DB gerçek (Testcontainers).
 """
 
-import pytest
 
 
 def _register_and_login(client, email: str, password: str = "Secure123!") -> str:

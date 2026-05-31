@@ -49,13 +49,19 @@ export default function CreateQR() {
   }
 
   const handleDownload = () => {
-    // image_data varsa doğrudan indir (S3'ten bağımsız)
+    // image_data (base64 data URL) varsa doğrudan indir; yoksa yeni sekmede aç
     const src = result.image_data || result.file_url
     const a = document.createElement('a')
     a.href = src
     a.download = `qlink-${Date.now()}.png`
-    if (!result.image_data) a.target = '_blank'
+    if (!result.image_data) {
+      // S3 URL fallback: yeni sekmede aç
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+    }
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
   }
 
   const handleReset = () => {

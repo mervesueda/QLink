@@ -2,7 +2,7 @@
 // ProtectedRoute tarafından sarmalandığından burada auth kontrolü yok.
 
 import { useCallback, useEffect, useState } from 'react'
-import { deleteQR, listQR } from '../api/client'
+import { deleteQR, getQRDownloadUrl, getQRImageUrl, listQR } from '../api/client'
 import styles from './MyQRs.module.css'
 
 function QRItem({ qr, onDelete }) {
@@ -22,11 +22,13 @@ function QRItem({ qr, onDelete }) {
   }
 
   const handleDownload = () => {
+    // Backend'den doğrudan PNG olarak indirir (S3 URL'si yerine backend proxy kullanılır)
     const a = document.createElement('a')
-    a.href = qr.file_url
+    a.href = getQRDownloadUrl(qr.id)
     a.download = `qlink-${qr.id}.png`
-    a.target = '_blank'
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
   }
 
   const formatDate = (dateStr) =>
@@ -37,7 +39,7 @@ function QRItem({ qr, onDelete }) {
   return (
     <div className={`card ${styles.qrItem}`} id={`qr-item-${qr.id}`}>
       <img
-        src={qr.file_url}
+        src={getQRImageUrl(qr.id)}
         alt="QR kod"
         className={styles.thumbnail}
         loading="lazy"

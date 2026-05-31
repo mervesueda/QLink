@@ -5,7 +5,6 @@ Veritabanı veya HTTP bağlantısı gerektirmez.
 Sadece security.py modülündeki fonksiyonları test eder.
 """
 
-import pytest
 from jose import jwt
 
 from app.core.config import settings

@@ -7,7 +7,6 @@ S3 veya veritabanı bağlantısı gerekmez.
 
 import io
 
-import pytest
 from PIL import Image
 
 from app.services.qr_service import generate_qr_png

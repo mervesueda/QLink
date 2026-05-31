@@ -31,5 +31,7 @@ skip_covered = false
 # Python lint aracı: PEP8 + daha fazlası
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]

@@ -59,4 +59,11 @@ export const getQR = (id) =>
 export const deleteQR = (id) =>
   api.delete(`/qr/${id}`)
 
+// Belirli bir QR'ın PNG görselini backend'den sunan URL.
+// Tarayıcı LocalStack S3'e erişmek zorunda kalmaz.
+export const getQRImageUrl = (id) => `${BASE_URL}/qr/${id}/image`
+
+// QR PNG'yi indirme linki (?download=true attachment olarak sunar)
+export const getQRDownloadUrl = (id) => `${BASE_URL}/qr/${id}/image?download=true`
+
 export default api

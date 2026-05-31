@@ -24,7 +24,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
 
-
 # ── PostgreSQL container (session genelinde 1 kez başlatılır) ──────────────
 
 @pytest.fixture(scope="session")
@@ -98,8 +97,8 @@ def client(db_session):
     Böylece API istekleri gerçek test DB'sine gider.
     lifespan devre dışı bırakılır (LocalStack bağlantısı gerektirmez).
     """
-    from app.db.base import get_db      # noqa: PLC0415
-    from app.main import app            # noqa: PLC0415
+    from app.db.base import get_db  # noqa: PLC0415
+    from app.main import app  # noqa: PLC0415
 
     def override_get_db():
         try:
