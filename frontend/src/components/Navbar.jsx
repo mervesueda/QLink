@@ -4,7 +4,7 @@
 // Giriş yapılmış: Anasayfa, QR Oluştur, QR'larım, Çıkış
 
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../store/authStore'
+import { useAuth } from '../store/authStore.jsx'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {

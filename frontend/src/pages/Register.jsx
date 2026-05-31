@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../store/authStore'
+import { useAuth } from '../store/authStore.jsx'
 import styles from './Auth.module.css'
 
 export default function Register() {

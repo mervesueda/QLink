@@ -10,7 +10,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createQR } from '../api/client'
-import { useAuth } from '../store/authStore'
+import { useAuth } from '../store/authStore.jsx'
 import styles from './CreateQR.module.css'
 
 const QR_TYPES = [
@@ -49,11 +49,12 @@ export default function CreateQR() {
   }
 
   const handleDownload = () => {
-    // S3 URL'ini anchor aracılığıyla indir
+    // image_data varsa doğrudan indir (S3'ten bağımsız)
+    const src = result.image_data || result.file_url
     const a = document.createElement('a')
-    a.href = result.file_url
+    a.href = src
     a.download = `qlink-${Date.now()}.png`
-    a.target = '_blank'
+    if (!result.image_data) a.target = '_blank'
     a.click()
   }
 
@@ -123,7 +124,7 @@ export default function CreateQR() {
             <div className={styles.result} id="qr-result">
               <div className={`card ${styles.qrCard}`}>
                 <img
-                  src={result.file_url}
+                  src={result.image_data || result.file_url}
                   alt="Oluşturulan QR kod"
                   className={styles.qrImage}
                   id="qr-image"

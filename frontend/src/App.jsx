@@ -2,7 +2,7 @@
 
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import { AuthProvider, useAuth } from './store/authStore'
+import { AuthProvider, useAuth } from './store/authStore.jsx'
 import CreateQR from './pages/CreateQR'
 import HomePage from './pages/HomePage'
 import Login from './pages/Login'

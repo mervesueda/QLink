@@ -9,16 +9,20 @@ Fixture scoping:
   - postgres_container, test_engine → session scope (tüm test boyunca 1 kez başlar)
   - db_session → function scope (her test kendi transaction'ında çalışır)
   - client → function scope (her test temiz bir HTTP client alır)
+
+ÖNEMLI: app.db.base modülü import edildiği anda module-level bir SQLAlchemy
+engine oluşturur (settings.DATABASE_URL kullanarak). Bu nedenle testcontainers
+container URL'sini os.environ'a yazmak, app modüllerini import etmeden ÖNCE
+yapılmalıdır. postgres_container fixture'ı bu sorunu çözer.
 """
+
+import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from testcontainers.postgres import PostgresContainer
-
-from app.db.base import Base, get_db
-from app.main import app
 
 
 # ── PostgreSQL container (session genelinde 1 kez başlatılır) ──────────────
@@ -27,9 +31,20 @@ from app.main import app
 def postgres_container():
     """
     Testcontainers ile geçici bir PostgreSQL container başlatır.
+    Container URL'si os.environ['DATABASE_URL']'e yazılır; böylece
+    app modülleri import edilmeden önce doğru URL kullanılır.
     Test oturumu bitince container otomatik silinir.
     """
     with PostgresContainer("postgres:15-alpine") as pg:
+        raw_url = pg.get_connection_url()
+        # psycopg2 driver'ını garantile (testcontainers sürüme göre farklı prefix döner)
+        if raw_url.startswith("postgresql://"):
+            db_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        else:
+            db_url = raw_url
+
+        # App modülleri bu env'i okur — import öncesinde set edilmeli
+        os.environ["DATABASE_URL"] = db_url
         yield pg
 
 
@@ -38,9 +53,19 @@ def test_engine(postgres_container):
     """
     Test veritabanı için SQLAlchemy engine oluşturur.
     Tüm tablolar oluşturulur, session sonunda kaldırılır.
+
+    postgres_container fixture'ı DATABASE_URL env'ini set ettiğinden
+    burada aynı URL'yi tekrar türetiriz.
     """
-    url = postgres_container.get_connection_url()
-    engine = create_engine(url, echo=False)
+    db_url = os.environ["DATABASE_URL"]
+    engine = create_engine(
+        db_url,
+        echo=False,
+        pool_pre_ping=True,  # bağlantı kesilmelerinde otomatik reconnect
+    )
+
+    # App modüllerini şimdi import ediyoruz; env ayarlandığı için doğru URL kullanılır
+    from app.db.base import Base  # noqa: PLC0415
     Base.metadata.create_all(bind=engine)
     yield engine
     Base.metadata.drop_all(bind=engine)
@@ -71,7 +96,11 @@ def client(db_session):
     """
     FastAPI'nin get_db dependency'sini test session'ıyla override eder.
     Böylece API istekleri gerçek test DB'sine gider.
+    lifespan devre dışı bırakılır (LocalStack bağlantısı gerektirmez).
     """
+    from app.db.base import get_db      # noqa: PLC0415
+    from app.main import app            # noqa: PLC0415
+
     def override_get_db():
         try:
             yield db_session
@@ -80,19 +109,20 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
 
+    # raise_server_exceptions=True → test hatalarını açık gösterir
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c
 
     app.dependency_overrides.clear()
 
 
-# ── S3 mock (unit testler için) ────────────────────────────────────────────
+# ── S3 mock (integration testler için) ────────────────────────────────────
 
 @pytest.fixture
 def mock_s3(monkeypatch):
     """
     S3 servisini monkeypatch ile mock'lar.
-    Unit testlerde LocalStack'e gerçek bağlantı gerekmez.
+    Integration testlerde LocalStack'e gerçek bağlantı gerekmez.
     """
     def fake_upload(file_bytes: bytes, object_key: str, content_type: str = "image/png") -> str:
         return f"http://localhost:4566/qlink-qrcodes/{object_key}"

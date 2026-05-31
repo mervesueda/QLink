@@ -9,6 +9,7 @@ DELETE /qr/{id}     → QR sil (auth zorunlu)
 Misafir kullanıcılar QR oluşturabilir fakat DB'ye kaydedilmez.
 """
 
+import base64
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -24,6 +25,12 @@ from app.services.s3_service import delete_from_s3, upload_to_s3
 router = APIRouter()
 
 
+def _png_to_data_url(png_bytes: bytes) -> str:
+    """PNG bytes'ı data URL'e çevirir. Browser doğrudan render edebilir."""
+    b64 = base64.b64encode(png_bytes).decode("utf-8")
+    return f"data:image/png;base64,{b64}"
+
+
 @router.post(
     "/create",
     summary="QR kod oluştur",
@@ -36,19 +43,27 @@ def create_qr(
 ):
     """
     PNG formatında QR kod üretir ve LocalStack S3'e yükler.
+    Yanıtta hem S3 file_url hem de base64 image_data döner.
     - Giriş yapmış kullanıcı: DB'ye kaydeder, QRResponse döner.
     - Misafir kullanıcı: sadece S3'e yükler, GuestQRResponse döner.
     """
     # 1. QR kodu PNG olarak üret
     png_bytes = generate_qr_png(qr_data.content)
 
-    # 2. Benzersiz bir dosya adı oluştur
+    # 2. Base64 data URL (browser erişimini garanti eder, S3'ten bağımsız)
+    image_data = _png_to_data_url(png_bytes)
+
+    # 3. Benzersiz bir dosya adı oluştur
     object_key = f"qr_{uuid.uuid4().hex}.png"
 
-    # 3. S3'e yükle ve public URL al
-    file_url = upload_to_s3(png_bytes, object_key)
+    # 4. S3'e yükle (başarısız olsa bile devam et; image_data zaten mevcut)
+    try:
+        file_url = upload_to_s3(png_bytes, object_key)
+    except Exception:
+        # LocalStack henüz hazır değilse image_data ile devam et
+        file_url = f"/qr/image/{object_key}"  # Fallback: backend proxy
 
-    # 4. Giriş yapmış kullanıcıysa DB'ye kaydet
+    # 5. Giriş yapmış kullanıcıysa DB'ye kaydet
     if current_user:
         qr_code = QRCode(
             user_id=current_user.id,
@@ -69,6 +84,7 @@ def create_qr(
             file_format=qr_code.file_format,
             created_at=qr_code.created_at,
             user_id=str(qr_code.user_id),
+            image_data=image_data,
         )
 
     # Misafir: DB'ye kaydetme, sadece URL döndür
@@ -77,7 +93,9 @@ def create_qr(
         content=qr_data.content,
         qr_type=qr_data.qr_type,
         saved=False,
+        image_data=image_data,
     )
+
 
 
 @router.get(

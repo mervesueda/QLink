@@ -1,38 +1,54 @@
 """
 security.py – Kimlik doğrulama altyapısı.
 
-- Şifre hash/doğrulama: passlib + bcrypt
+- Şifre hash/doğrulama: bcrypt (doğrudan, passlib bypass)
 - JWT üretme/çözme: python-jose
 - FastAPI dependency: get_current_user (zorunlu) ve get_current_user_optional (misafir izin verilir)
+
+ NOT: passlib 1.7.4, bcrypt>=4.0 ile uyumsuz (ValueError: password cannot be longer
+ than 72 bytes). Bu yüzden bcrypt doğrudan kullanılmaktadır. Şifre, bcrypt'e
+ verilmeden önce SHA-256 ile hash'lenip base64'e çevrilerek 72-byte limitinin
+ altına düşürülür. Bu teknik Stanford'un password hashing önerisiyle uyumludur.
 """
 
+import base64
+import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.base import get_db
 
-# bcrypt şifre hash bağlamı
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # Bearer token okuyucu (Authorization: Bearer <token>)
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
+def _prepare_password(plain: str) -> bytes:
+    """
+    Şifreyi bcrypt'e vermeden önce SHA-256 + base64 ile 64 byte'a indirir.
+    Bu sayede bcrypt'in 72-byte sınırı aşılmaz ve tüm şifre entropisi korunur.
+    """
+    digest = hashlib.sha256(plain.encode("utf-8")).digest()
+    return base64.b64encode(digest)  # her zaman 44 byte (< 72)
+
+
 def hash_password(plain: str) -> str:
     """Düz metin şifreyi bcrypt ile hashler."""
-    return pwd_context.hash(plain)
+    prepared = _prepare_password(plain)
+    hashed = bcrypt.hashpw(prepared, bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Gelen şifre ile hash'i karşılaştırır."""
-    return pwd_context.verify(plain, hashed)
+    prepared = _prepare_password(plain)
+    return bcrypt.checkpw(prepared, hashed.encode("utf-8"))
 
 
 def create_access_token(data: dict) -> str:

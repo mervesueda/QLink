@@ -37,6 +37,8 @@ class QRResponse(BaseModel):
     file_format: str
     created_at: datetime
     user_id: Optional[str] = None
+    # Base64 PNG verisi: browser doğrudan görüntüleyebilir (S3 URL'si erişilemez olsa bile)
+    image_data: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -52,3 +54,5 @@ class GuestQRResponse(BaseModel):
     qr_type: str
     file_format: str = "png"
     saved: bool = False  # Kullanıcıya "kaydedilmedi" bilgisini ilet
+    # Base64 PNG verisi
+    image_data: Optional[str] = None

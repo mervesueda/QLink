@@ -1,4 +1,4 @@
-// store/authStore.js – Auth state yönetimi (React Context).
+// store/authStore.jsx – Auth state yönetimi (React Context).
 //
 // Zustand veya Redux yerine Context tercih edildi:
 // Bu büyüklükteki proje için yeterli; ek bağımlılık gerektirmez.

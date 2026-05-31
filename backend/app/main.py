@@ -25,7 +25,7 @@ from app.api import qr as qr_router
 from app.core.config import settings
 from app.core.metrics import setup_metrics
 from app.core.telemetry import setup_tracing
-from app.db.base import Base, engine
+from app.db.base import Base, get_engine
 from app.services.s3_service import create_bucket_if_not_exists
 
 
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     """Uygulama açılış/kapanış yaşam döngüsü."""
     # --- Başlangıç ---
     # Tabloları oluştur (migrations yerine; proje için yeterli)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=get_engine())
 
     # LocalStack'te bucket yoksa oluştur
     try:
@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
     yield  # Uygulama burada çalışır
 
     # --- Kapanış ---
-    engine.dispose()
+    get_engine().dispose()
 
 
 app = FastAPI(

@@ -2,7 +2,7 @@
 // Projeyi tanıtan basit ama temiz bir karşılama ekranı.
 
 import { Link } from 'react-router-dom'
-import { useAuth } from '../store/authStore'
+import { useAuth } from '../store/authStore.jsx'
 import styles from './HomePage.module.css'
 
 const FEATURES = [
