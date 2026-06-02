@@ -107,6 +107,7 @@ def get_current_user_optional(
     Opsiyonel auth dependency.
     Token yoksa None döner, varsa doğrular.
     Misafir kullanıcıların QR oluşturabilmesi için kullanılır.
+    Gelen token geçersiz veya süresi dolmuşsa 401 döner (silence bypass'ı önler).
     """
     from app.db.models import User
 
@@ -115,6 +116,16 @@ def get_current_user_optional(
 
     user_id = decode_token(credentials.credentials)
     if not user_id:
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Geçersiz veya süresi dolmuş token",
+        )
 
-    return db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Kullanıcı bulunamadı",
+        )
+
+    return user

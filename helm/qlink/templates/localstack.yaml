@@ -1,0 +1,52 @@
+{{/* helm/qlink/templates/localstack.yaml */}}
+
+---
+# LocalStack Deployment (S3 emülatörü)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-localstack
+  labels:
+    app: {{ .Release.Name }}-localstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-localstack
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-localstack
+    spec:
+      containers:
+        - name: localstack
+          image: "{{ .Values.localstack.image.repository }}:{{ .Values.localstack.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4566
+          env:
+            - name: SERVICES
+              value: {{ .Values.localstack.services | quote }}
+            - name: DEBUG
+              value: "0"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# LocalStack Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-localstack
+spec:
+  selector:
+    app: {{ .Release.Name }}-localstack
+  ports:
+    - port: 4566
+      targetPort: 4566
+  type: ClusterIP

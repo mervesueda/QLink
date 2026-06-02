@@ -1,8 +1,16 @@
 // pages/MyQRs.jsx – Kullanıcının QR listesi (auth-gated).
 // ProtectedRoute tarafından sarmalandığından burada auth kontrolü yok.
+//
+// ÖNEMLI: QR görselleri için AuthenticatedImage kullanılır.
+// Neden: Browser <img src> tag'i Authorization header gönderemez.
+// Backend /qr/{id}/image endpoint'i JWT gerektirdiğinden doğrudan src ile
+// erişim 401 ü/rer ve görsel kırılır. fetch() API'si header gönderebilir.
+//
+// Benzer şekilde download için de <a href> yerine downloadQRBlob kullanılır.
 
 import { useCallback, useEffect, useState } from 'react'
-import { deleteQR, getQRDownloadUrl, getQRImageUrl, listQR } from '../api/client'
+import AuthenticatedImage from '../components/AuthenticatedImage'
+import { deleteQR, downloadQRBlob, getQRImageUrl, listQR } from '../api/client'
 import styles from './MyQRs.module.css'
 
 function QRItem({ qr, onDelete }) {
@@ -21,14 +29,14 @@ function QRItem({ qr, onDelete }) {
     }
   }
 
-  const handleDownload = () => {
-    // Backend'den doğrudan PNG olarak indirir (S3 URL'si yerine backend proxy kullanılır)
-    const a = document.createElement('a')
-    a.href = getQRDownloadUrl(qr.id)
-    a.download = `qlink-${qr.id}.png`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+  const handleDownload = async () => {
+    // fetch+Blob yaklaşımı: Authorization header göndererek kimlik doğrulamasıyla PNG indirir.
+    // Neden <a href> kullanılmıyor: browser navigasyonu header gönderemez → 401 → indirme başlamaz.
+    try {
+      await downloadQRBlob(qr.id, `qlink-${qr.id}.png`)
+    } catch {
+      alert('İndirme başarısız oldu. Lütfen tekrar deneyin.')
+    }
   }
 
   const formatDate = (dateStr) =>
@@ -38,11 +46,18 @@ function QRItem({ qr, onDelete }) {
 
   return (
     <div className={`card ${styles.qrItem}`} id={`qr-item-${qr.id}`}>
-      <img
+      {/*
+        AuthenticatedImage:
+        - fetch() ile JWT header göndererek görseli alır
+        - Blob URL üretir ve <img src={blobUrl}> olarak render eder
+        - Loading / error state'lerini yönetir
+      */}
+      <AuthenticatedImage
         src={getQRImageUrl(qr.id)}
         alt="QR kod"
         className={styles.thumbnail}
         loading="lazy"
+        id={`qr-thumb-${qr.id}`}
       />
       <div className={styles.info}>
         <span className={`badge badge-${qr.qr_type}`}>{qr.qr_type}</span>

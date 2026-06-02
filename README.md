@@ -202,7 +202,8 @@ cd frontend
 npx playwright install chromium
 
 # Testleri çalıştır (frontend ve backend ayakta olmalı)
-PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test
+$env:PLAYWRIGHT_BASE_URL="http://localhost:3000"
+npx playwright test
 
 # UI modunda (görsel debug)
 npx playwright test --ui
@@ -269,7 +270,7 @@ minikube start
 
 # Docker image'larını Minikube'de oluştur
 eval $(minikube docker-env)   # Linux/macOS
-# Windows PowerShell: minikube docker-env | Invoke-Expression
+minikube docker-env | Invoke-Expression   # Windows PowerShell  
 
 docker build -t qlink-backend:latest ./backend
 docker build -t qlink-frontend:latest ./frontend
