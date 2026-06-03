@@ -36,11 +36,10 @@ def postgres_container():
     """
     with PostgresContainer("postgres:15-alpine") as pg:
         raw_url = pg.get_connection_url()
-        # psycopg2 driver'ını garantile (testcontainers sürüme göre farklı prefix döner)
-        if raw_url.startswith("postgresql://"):
-            db_url = raw_url.replace("postgresql://", "postgresql+psycopg2://", 1)
-        else:
-            db_url = raw_url
+        # Testcontainers varsayılan olarak postgresql+psycopg2 dönebilir veya düz postgresql.
+        db_url = raw_url.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+        if db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
         # App modülleri bu env'i okur — import öncesinde set edilmeli
         os.environ["DATABASE_URL"] = db_url

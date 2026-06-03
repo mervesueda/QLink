@@ -37,6 +37,12 @@ def _png_to_data_url(png_bytes: bytes) -> str:
     summary="QR kod oluştur",
     status_code=status.HTTP_201_CREATED,
 )
+@router.post(
+    "/generate",
+    summary="QR kod oluştur (v1 alias)",
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=True,
+)
 def create_qr(
     qr_data: QRCreate,
     db: Session = Depends(get_db),
@@ -102,6 +108,12 @@ def create_qr(
     "/list",
     response_model=list[QRResponse],
     summary="QR listesini getir (auth zorunlu)",
+)
+@router.get(
+    "/history",
+    response_model=list[QRResponse],
+    summary="QR geçmişini getir (v1 alias)",
+    include_in_schema=True,
 )
 def list_qr(
     db: Session = Depends(get_db),

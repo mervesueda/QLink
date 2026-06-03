@@ -109,7 +109,7 @@ export default function () {
 
 export function handleSummary(data) {
   return {
-    'performance/k6_summary.json': JSON.stringify(data, null, 2),
+    'perf/k6_summary.json': JSON.stringify(data, null, 2),
     stdout: textSummary(data, { indent: ' ', enableColors: true }),
   }
 }

@@ -1,0 +1,37 @@
+🚀 QLink başarıyla kuruldu!
+
+Release : {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+Chart    : {{ .Chart.Name }} v{{ .Chart.Version }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Servisler
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend (NodePort {{ .Values.frontend.service.nodePort }}):
+  minikube service {{ .Release.Name }}-frontend --url
+
+Backend API:
+  kubectl port-forward svc/{{ .Release.Name }}-backend 8000:8000
+  Swagger UI: http://localhost:8000/docs
+  Health:     http://localhost:8000/health
+  Metrics:    http://localhost:8000/metrics
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Hızlı Test
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  # Sağlık kontrolü
+  curl http://localhost:8000/health
+
+  # QR oluşturma (misafir)
+  curl -X POST http://localhost:8000/api/v1/qr/generate \
+    -H "Content-Type: application/json" \
+    -d '{"content":"https://example.com","qr_type":"url"}'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Upgrade / Uninstall
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  helm upgrade {{ .Release.Name }} ./helm/qlink
+  helm uninstall {{ .Release.Name }}

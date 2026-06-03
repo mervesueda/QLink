@@ -1,0 +1,305 @@
+{
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": true,
+    "isStdErrTTY": true,
+    "testRunDurationMs": 480086.006
+  },
+  "metrics": {
+    "qr_create_latency_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 2393.29335304289,
+        "min": 13.9805,
+        "med": 1719.1916,
+        "max": 6621.818,
+        "p(90)": 5017.614240000001,
+        "p(95)": 5337.54425
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 5250.3145,
+        "avg": 2031.437165955331,
+        "min": 0.504,
+        "med": 1587.5932,
+        "max": 6621.818,
+        "p(90)": 4794.0151
+      },
+      "thresholds": {
+        "p(95)<500": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 4794.0151,
+        "p(95)": 5250.3145,
+        "avg": 2031.437165955331,
+        "min": 0.504,
+        "med": 1587.5932,
+        "max": 6621.818
+      }
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 26991
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": true
+        }
+      }
+    },
+    "qr_health_latency_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 589.9587249630724,
+        "min": 0.504,
+        "med": 407.87334999999996,
+        "max": 2142.0253,
+        "p(90)": 1421.22495,
+        "p(95)": 1575.2796250000001
+      },
+      "thresholds": {
+        "p(95)<100": {
+          "ok": false
+        }
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 10.2136,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0.005044173983920567,
+        "min": 0,
+        "med": 0
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 1587.4492,
+        "max": 6621.818,
+        "p(90)": 4794.0151,
+        "p(95)": 5250.3145,
+        "avg": 2031.3864573339354,
+        "min": 0.504
+      }
+    },
+    "iterations": {
+      "contains": "default",
+      "values": {
+        "rate": 56.22117633647501,
+        "count": 26991
+      },
+      "type": "counter"
+    },
+    "error_rate": {
+      "contains": "default",
+      "values": {
+        "rate": 0.9400695249130938,
+        "passes": 20282,
+        "fails": 1293
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": false
+        }
+      },
+      "type": "rate"
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0.7417946711691307,
+        "passes": 72052,
+        "fails": 25080
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 102.8449,
+        "med": 1788.8787,
+        "max": 6890.4967,
+        "p(90)": 4991.3671,
+        "p(95)": 5445.75335,
+        "avg": 2232.0329075914146
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0,
+        "max": 5.3335,
+        "p(90)": 0,
+        "p(95)": 0.5206,
+        "avg": 0.047586373235522963,
+        "min": 0
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "rate": 59813.42226417656,
+        "count": 28715587
+      }
+    },
+    "data_sent": {
+      "values": {
+        "rate": 10103.53965618402,
+        "count": 4850568
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "vus_max": {
+      "values": {
+        "value": 200,
+        "min": 200,
+        "max": 200
+      },
+      "type": "gauge",
+      "contains": "default"
+    },
+    "http_reqs": {
+      "contains": "default",
+      "values": {
+        "count": 26991,
+        "rate": 56.22117633647501
+      },
+      "type": "counter"
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "max": 0,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 1,
+        "min": 1,
+        "max": 200
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 0,
+        "avg": 0.0038003075099107115,
+        "min": 0,
+        "med": 0,
+        "max": 2.0305,
+        "p(90)": 0
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 4.915,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0.003122248156793005,
+        "min": 0,
+        "med": 0
+      }
+    }
+  },
+  "root_group": {
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [],
+    "checks": [
+        {
+          "name": "Health: status 200",
+          "path": "::Health: status 200",
+          "id": "bbe0132808ed2839cf835cd341ad9bfa",
+          "passes": 5416,
+          "fails": 0
+        },
+        {
+          "passes": 618,
+          "fails": 4798,
+          "name": "Health: latency < 100ms",
+          "path": "::Health: latency < 100ms",
+          "id": "286976d5b75e8203017594466dff26d6"
+        },
+        {
+          "path": "::QR generate: status 201",
+          "id": "b6eeaf056edc7f0a86596a890378d8ff",
+          "passes": 21575,
+          "fails": 0,
+          "name": "QR generate: status 201"
+        },
+        {
+          "name": "QR generate: has file_url",
+          "path": "::QR generate: has file_url",
+          "id": "e6aa5e90f2dbab9976bf5ab2a3f30d7b",
+          "passes": 21575,
+          "fails": 0
+        },
+        {
+          "path": "::QR generate: has image_data",
+          "id": "f9cf36de89691f0b9243e112308bcf22",
+          "passes": 21575,
+          "fails": 0,
+          "name": "QR generate: has image_data"
+        },
+        {
+          "name": "QR generate: latency < 500ms",
+          "path": "::QR generate: latency < 500ms",
+          "id": "3010ad5a7d8abf1165683ab0585164e9",
+          "passes": 1293,
+          "fails": 20282
+        }
+      ],
+    "name": ""
+  }
+}

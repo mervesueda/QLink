@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from 'react'
  * @param {string}  className - CSS class
  * @param {...any}  rest      - Diğer img prop'ları
  */
-export default function AuthenticatedImage({ src, alt = 'QR kod', className = '', ...rest }) {
+export default function AuthenticatedImage({ src, alt = 'QR kod', className = '', id, ...rest }) {
   const [blobUrl, setBlobUrl] = useState(null)
   const [status, setStatus]   = useState('loading') // 'loading' | 'success' | 'error'
   const currentBlobUrl        = useRef(null)
@@ -109,6 +109,8 @@ export default function AuthenticatedImage({ src, alt = 'QR kod', className = ''
       </div>
     )
   }
+  // id is intentionally NOT spread onto loading/error divs so that
+  // test selectors like [id^="qr-thumb-"] always resolve to the <img>.
 
   if (status === 'error') {
     return (
@@ -138,6 +140,7 @@ export default function AuthenticatedImage({ src, alt = 'QR kod', className = ''
       src={blobUrl}
       alt={alt}
       className={className}
+      id={id}
       {...rest}
     />
   )

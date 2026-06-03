@@ -12,7 +12,7 @@ metadata:
     app: qlink
 data:
   # Veritabanı bağlantısı (postgres service adı)
-  DATABASE_URL: "postgresql://qlink:qlink@qlink-postgres:5432/qlink"
+  DATABASE_URL: "postgresql+psycopg://qlink:qlink@qlink-postgres:5432/qlink"
 
   # LocalStack S3 (localstack service adı)
   AWS_ENDPOINT_URL: "http://qlink-localstack:4566"

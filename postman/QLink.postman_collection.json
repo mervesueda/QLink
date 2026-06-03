@@ -1,139 +1,375 @@
 {
   "info": {
-    "name": "QLink API",
-    "description": "QLink Cloud-Native QR Code Management Platform – API Test Collection\nNewman ile CI/CD içinde çalıştırılır.\n\nKullanım:\n  newman run postman/QLink.postman_collection.json --env-var BASE_URL=http://localhost:8000",
+    "name": "QLink API – Full Suite",
+    "description": "QLink Cloud-Native QR Code Management Platform – Tam API Test Collection\n\nŞartname endpoint'lerinin tamamı test edilir:\n  - POST /auth/register\n  - POST /auth/login\n  - POST /api/v1/qr/generate\n  - GET  /api/v1/qr/history\n  - GET  /api/v1/qr/{id}\n  - DELETE /api/v1/qr/{id}\n  - GET /health\n  - GET /metrics\n\nNewman CLI:\n  newman run postman/QLink.postman_collection.json --env-var BASE_URL=http://localhost:8000",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "variable": [
     { "key": "BASE_URL", "value": "http://localhost:8000" },
     { "key": "token", "value": "" },
-    { "key": "qr_id", "value": "" }
+    { "key": "qr_id", "value": "" },
+    { "key": "test_email", "value": "" }
   ],
   "item": [
     {
-      "name": "1. Register",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": { "raw": "{{BASE_URL}}/auth/register", "host": ["{{BASE_URL}}"], "path": ["auth", "register"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"newman_{{$timestamp}}@test.com\",\n  \"password\": \"Newman123!\"\n}"
-        }
-      },
-      "event": [
+      "name": "Health Check",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Status 201', () => pm.response.to.have.status(201));",
-              "pm.test('Has email field', () => {",
-              "  const body = pm.response.json();",
-              "  pm.expect(body).to.have.property('email');",
-              "  pm.collectionVariables.set('test_email', body.email);",
-              "});"
-            ]
-          }
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/health", "host": ["{{BASE_URL}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('healthy status', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.status).to.eql('healthy');",
+                  "  pm.expect(body.service).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /metrics (Prometheus)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/metrics", "host": ["{{BASE_URL}}"], "path": ["metrics"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Content-Type text/plain', () => {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});",
+                  "pm.test('Contains http_requests_total metric', () => {",
+                  "  pm.expect(pm.response.text()).to.include('http_requests_total');",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "2. Login",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "url": { "raw": "{{BASE_URL}}/auth/login", "host": ["{{BASE_URL}}"], "path": ["auth", "login"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"Newman123!\"\n}"
-        }
-      },
-      "event": [
+      "name": "Auth",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));",
-              "pm.test('Has access_token', () => {",
-              "  const body = pm.response.json();",
-              "  pm.expect(body).to.have.property('access_token');",
-              "  pm.collectionVariables.set('token', body.access_token);",
-              "});"
-            ]
-          }
+          "name": "1. Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/auth/register", "host": ["{{BASE_URL}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newman_{{$timestamp}}@example.com\",\n  \"password\": \"Newman123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Has email field', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('email');",
+                  "  pm.collectionVariables.set('test_email', body.email);",
+                  "});",
+                  "pm.test('Response time < 2000ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Register – Duplicate Email (422)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/auth/register", "host": ["{{BASE_URL}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"Newman123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Duplicate email rejected 400', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 409]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/auth/login", "host": ["{{BASE_URL}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"Newman123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has access_token', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('access_token');",
+                  "  pm.expect(body.access_token).to.be.a('string');",
+                  "  pm.collectionVariables.set('token', body.access_token);",
+                  "});",
+                  "pm.test('Has token_type', () => {",
+                  "  pm.expect(pm.response.json().token_type).to.eql('bearer');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Login – Wrong Password (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/auth/login", "host": ["{{BASE_URL}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"WrongPass999!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Wrong password rejected 401', () => {",
+                  "  pm.expect(pm.response.code).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
     {
-      "name": "3. Create QR",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{token}}" }
-        ],
-        "url": { "raw": "{{BASE_URL}}/qr/create", "host": ["{{BASE_URL}}"], "path": ["qr", "create"] },
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"content\": \"https://qlink.example.com\",\n  \"qr_type\": \"url\"\n}"
-        }
-      },
-      "event": [
+      "name": "QR Code (v1 Endpoints)",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Status 201', () => pm.response.to.have.status(201));",
-              "pm.test('Has file_url', () => {",
-              "  const body = pm.response.json();",
-              "  pm.expect(body).to.have.property('file_url');",
-              "  pm.expect(body).to.have.property('id');",
-              "  pm.collectionVariables.set('qr_id', body.id);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. List QR Codes",
-      "request": {
-        "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-        "url": { "raw": "{{BASE_URL}}/qr/list", "host": ["{{BASE_URL}}"], "path": ["qr", "list"] }
-      },
-      "event": [
+          "name": "5. POST /api/v1/qr/generate (Guest)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/generate", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "generate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"https://example.com/guest-test\",\n  \"qr_type\": \"url\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response JSON structure (guest)', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('file_url');",
+                  "  pm.expect(body).to.have.property('content');",
+                  "  pm.expect(body).to.have.property('qr_type');",
+                  "  pm.expect(body).to.have.property('image_data');",
+                  "  pm.expect(body.saved).to.be.false;",
+                  "});",
+                  "pm.test('image_data is base64 PNG', () => {",
+                  "  pm.expect(pm.response.json().image_data).to.include('data:image/png;base64,');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Status 200', () => pm.response.to.have.status(200));",
-              "pm.test('Returns array', () => {",
-              "  const body = pm.response.json();",
-              "  pm.expect(body).to.be.an('array');",
-              "  pm.expect(body.length).to.be.greaterThan(0);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "5. Delete QR Code",
-      "request": {
-        "method": "DELETE",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-        "url": { "raw": "{{BASE_URL}}/qr/{{qr_id}}", "host": ["{{BASE_URL}}"], "path": ["qr", "{{qr_id}}"] }
-      },
-      "event": [
+          "name": "6. POST /api/v1/qr/generate (Auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/generate", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "generate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"https://qlink.example.com/auth-test\",\n  \"qr_type\": \"url\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response JSON structure (auth)', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('id');",
+                  "  pm.expect(body).to.have.property('user_id');",
+                  "  pm.expect(body).to.have.property('file_url');",
+                  "  pm.expect(body).to.have.property('created_at');",
+                  "  pm.collectionVariables.set('qr_id', body.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Status 204', () => pm.response.to.have.status(204));"
-            ]
-          }
+          "name": "7. GET /api/v1/qr/history",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/history", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "history"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns array with at least 1 item', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.be.an('array');",
+                  "  pm.expect(body.length).to.be.greaterThan(0);",
+                  "});",
+                  "pm.test('Each item has required fields', () => {",
+                  "  const item = pm.response.json()[0];",
+                  "  pm.expect(item).to.have.property('id');",
+                  "  pm.expect(item).to.have.property('content');",
+                  "  pm.expect(item).to.have.property('qr_type');",
+                  "  pm.expect(item).to.have.property('file_url');",
+                  "  pm.expect(item).to.have.property('created_at');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7b. GET /api/v1/qr/history – No Auth (401)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/history", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "history"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unauthorized without token 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. GET /api/v1/qr/{id}",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/{{qr_id}}", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "{{qr_id}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns correct QR by id', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.id).to.eql(pm.collectionVariables.get('qr_id'));",
+                  "  pm.expect(body).to.have.property('content');",
+                  "  pm.expect(body).to.have.property('file_url');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8b. GET /api/v1/qr/nonexistent (404)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/00000000-0000-0000-0000-000000000000", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "00000000-0000-0000-0000-000000000000"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Nonexistent QR returns 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. DELETE /api/v1/qr/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/{{qr_id}}", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "{{qr_id}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9b. GET after DELETE (404)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{BASE_URL}}/api/v1/qr/{{qr_id}}", "host": ["{{BASE_URL}}"], "path": ["api", "v1", "qr", "{{qr_id}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Deleted QR returns 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

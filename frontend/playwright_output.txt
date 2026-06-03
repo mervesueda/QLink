@@ -1,0 +1,40 @@
+
+Running 7 tests using 2 workers
+
+[1A[2K[1/7] [chromium] › e2e\qlink.spec.js:18:1 › Senaryo 1: Ana sayfa başarıyla açılır
+[1A[2K[2/7] [chromium] › e2e\qr-image-download.spec.js:38:3 › QR Görsel ve İndirme Akışı › QR önizleme görselleri kırık olmadan yüklenmeli (AuthenticatedImage)
+[1A[2K[3/7] [chromium] › e2e\qlink.spec.js:36:1 › Senaryo 2: Misafir kullanıcı QR oluşturabilir
+[1A[2K[4/7] [chromium] › e2e\qlink.spec.js:57:1 › Senaryo 3: Oluşturulan QR indirilebilir
+[1A[2K[5/7] [chromium] › e2e\qr-image-download.spec.js:56:3 › QR Görsel ve İndirme Akışı › İndirme butonu fetch+blob akışıyla dosyayı indirebilmeli
+[1A[2K[6/7] [chromium] › e2e\qlink.spec.js:78:1 › Senaryo 4: Kullanıcı kayıt olup giriş yapabilir
+[1A[2K[7/7] [chromium] › e2e\qlink.spec.js:102:1 › Senaryo 5: Giriş yapılmış kullanıcı QR listesini görebilir
+[1A[2K  1) [chromium] › e2e\qr-image-download.spec.js:56:3 › QR Görsel ve İndirme Akışı › İndirme butonu fetch+blob akışıyla dosyayı indirebilmeli 
+
+    TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      18 |     await page.click('#register-submit')
+      19 |     
+    > 20 |     await page.waitForURL(/login/)
+         |                ^
+      21 |     await page.fill('#login-email', TEST_EMAIL)
+      22 |     await page.fill('#login-password', TEST_PASSWORD)
+      23 |     await page.click('#login-submit')
+        at C:\Users\elifs\QLink\frontend\e2e\qr-image-download.spec.js:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\qr-image-download-QR-Görse-81688-şıyla-dosyayı-indirebilmeli-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\qr-image-download-QR-Görse-81688-şıyla-dosyayı-indirebilmeli-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\qr-image-download-QR-Görse-81688-şıyla-dosyayı-indirebilmeli-chromium\error-context.md
+
+
+[1A[2K  1 failed
+    [chromium] › e2e\qr-image-download.spec.js:56:3 › QR Görsel ve İndirme Akışı › İndirme butonu fetch+blob akışıyla dosyayı indirebilmeli 
+  6 passed (42.5s)

@@ -1,44 +1,28 @@
 # ----- Stage 1: Builder -----
-# Bağımlılıkları bu aşamada kur; üretim image'ına derleyiciler taşınmaz
-FROM python:3.12-slim AS builder
+FROM python:3.12-alpine AS builder
 
 WORKDIR /build
 
-# Derleme için gerekli sistem kütüphaneleri
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Derleme için gerekli kütüphaneleri Alpine paket yöneticisiyle (apk) kuruyoruz
+RUN apk add --no-cache gcc musl-dev postgresql-dev curl
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ----- Stage 2: Runtime -----
-# Sadece çalışma zamanı için gereken minimum image
-FROM python:3.12-slim
+FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Çalışma zamanı kütüphaneleri + healthcheck için curl
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Çalışma zamanı için gerekli kütüphaneler
+RUN apk add --no-cache libpq curl
 
-# Builder aşamasında kurulan paketleri kopyala
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-
-# Uygulama kodunu kopyala
-COPY app/ ./app/
-
-# Root olmayan kullanıcıyla çalıştır (güvenlik)
-RUN adduser --disabled-password --gecos "" appuser
-USER appuser
+COPY --from=builder /install /usr/local
+COPY . .
 
 EXPOSE 8000
 
-# Üretimde workers artırılabilir: --workers 4
+HEALTHCHECK --interval=15s --timeout=5s --retries=5 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

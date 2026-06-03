@@ -69,7 +69,9 @@ app.add_middleware(
 
 # Route'ları kaydet
 app.include_router(auth_router.router, prefix="/auth", tags=["Auth"])
+# Hem eski /qr/* rotaları (React frontend) hem de şartname /api/v1/qr/* rotaları aktif
 app.include_router(qr_router.router, prefix="/qr", tags=["QR Codes"])
+app.include_router(qr_router.router, prefix="/api/v1/qr", tags=["QR Codes (v1)"])
 
 # Prometheus: /metrics endpoint'ini ekle
 setup_metrics(app)

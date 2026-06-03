@@ -1,0 +1,5 @@
+
+Running 2 tests using 1 worker
+
+[1A[2K[1/2] [chromium] › e2e\qr-image-download.spec.js:38:3 › QR Görsel ve İndirme Akışı › QR önizleme görselleri kırık olmadan yüklenmeli (AuthenticatedImage)
+[1A[2K[2/2] [chromium] › e2e\qr-image-download.spec.js:56:3 › QR Görsel ve İndirme Akışı › İndirme butonu fetch+blob akışıyla dosyayı indirebilmeli

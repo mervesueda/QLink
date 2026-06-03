@@ -8,6 +8,7 @@ metadata:
   name: {{ .Release.Name }}-backend
   labels:
     app: {{ .Release.Name }}-backend
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
@@ -17,6 +18,13 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-backend
+      annotations:
+        # Prometheus bu annotation'ları okuyarak /metrics endpoint'ini scrape eder
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+        # Her Helm upgrade'de rolling restart tetikler (config değişikliği için)
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
         - name: backend
@@ -31,8 +39,16 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 15
+            initialDelaySeconds: 20
             periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
 
@@ -44,6 +60,7 @@ metadata:
   name: {{ .Release.Name }}-frontend
   labels:
     app: {{ .Release.Name }}-frontend
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
   selector:
@@ -65,5 +82,11 @@ spec:
             # Helm release adı 'qlink' ise backend servisi 'qlink-backend'dir.
             - name: BACKEND_HOST
               value: "{{ .Release.Name }}-backend"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}

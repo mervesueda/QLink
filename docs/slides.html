@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QLink – Cloud-Native QR Code Management Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2236;
+      --border: rgba(99,102,241,0.25);
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --slide-w: 1200px;
+      --slide-h: 675px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #050810;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      background: var(--surface);
+      padding: 10px 20px;
+      border-radius: 40px;
+      border: 1px solid var(--border);
+      position: sticky;
+      top: 16px;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .controls button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      transition: all .2s;
+    }
+    .controls button:hover { background: var(--accent); border-color: var(--accent); }
+    .slide-counter {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 70px;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: .5px;
+    }
+
+    /* ── Slide Wrapper ── */
+    .slides-container {
+      width: var(--slide-w);
+      max-width: 100%;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: var(--slide-w);
+      height: var(--slide-h);
+      max-width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border);
+      box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+      animation: slideIn .4s cubic-bezier(.22,1,.36,1);
+    }
+    .slide.active { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px) scale(.98); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* ── Slide number badge ── */
+    .slide-badge {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      z-index: 10;
+    }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 1 – Title
+    ══════════════════════════════════════════════ */
+    .s1 {
+      background: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0d1b33 100%);
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .s1::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 50%, rgba(99,102,241,.18) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 50%, rgba(139,92,246,.14) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 30% at 50% 10%, rgba(6,182,212,.1) 0%, transparent 50%);
+    }
+    .s1-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .s1-content { position: relative; z-index: 2; padding: 40px; }
+    .s1-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.4);
+      color: #a5b4fc;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .s1-tag span { width: 6px; height: 6px; background: #6366f1; border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+    .s1-title {
+      font-size: 80px;
+      font-weight: 900;
+      letter-spacing: -4px;
+      line-height: 1;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .s1-subtitle {
+      font-size: 20px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-bottom: 36px;
+      letter-spacing: .3px;
+    }
+    .s1-chips {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .chip {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .chip.accent { background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.4); color: #a5b4fc; }
+    .s1-team {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+    .avatar-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 12px 20px;
+      border-radius: 12px;
+    }
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .avatar.a1 { background: linear-gradient(135deg,#6366f1,#8b5cf6); }
+    .avatar.a2 { background: linear-gradient(135deg,#06b6d4,#3b82f6); }
+    .avatar-info .name { font-size: 13px; font-weight: 600; }
+    .avatar-info .role { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .s1-uni { position: absolute; bottom: 20px; font-size: 11px; color: rgba(148,163,184,.4); letter-spacing: .5px; }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 2 – Problem & Solution
+    ══════════════════════════════════════════════ */
+    .s2 {
+      background: var(--bg);
+      flex-direction: column;
+    }
+    .slide-header {
+      padding: 32px 48px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      padding-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .slide-header-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .slide-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+    }
+    .slide-header .accent-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+      margin-left: 16px;
+    }
+    .slide-body {
+      flex: 1;
+      padding: 28px 48px;
+      display: flex;
+      gap: 32px;
+    }
+
+    /* Problem cards */
+    .problem-col { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .problem-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: border-color .2s;
+    }
+    .problem-card:hover { border-color: rgba(99,102,241,.4); }
+    .problem-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .problem-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .problem-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    .solution-col {
+      width: 340px;
+      background: linear-gradient(160deg, rgba(99,102,241,.1) 0%, rgba(139,92,246,.05) 100%);
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .solution-col h3 { font-size: 13px; font-weight: 700; color: #a5b4fc; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+    .sol-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 13px;
+    }
+    .sol-item:last-child { border-bottom: none; }
+    .sol-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .mission-box {
+      margin-top: auto;
+      background: rgba(99,102,241,.12);
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 12px;
+      color: #c4b5fd;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 3 – Architecture
+    ══════════════════════════════════════════════ */
+    .s3 {
+      background: var(--bg);
+      flex-direction: column;
+    }
+    .arch-body {
+      flex: 1;
+      padding: 20px 48px 28px;
+      display: flex;
+      gap: 24px;
+    }
+    .arch-diagram {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .arch-diagram::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(99,102,241,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .arch-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+      margin: 6px 0;
+    }
+    .arch-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .arch-box {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+    .arch-box.react  { background: rgba(6,182,212,.12); border-color: rgba(6,182,212,.4); color: #67e8f9; }
+    .arch-box.fastapi{ background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.4); color: #6ee7b7; }
+    .arch-box.pg     { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.4); color: #93c5fd; }
+    .arch-box.s3     { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.4); color: #fcd34d; }
+    .arch-box.prom   { background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4); color: #fca5a5; }
+    .arch-box.graf   { background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.4); color: #fdba74; }
+    .arch-box.jaeg   { background: rgba(168,85,247,.12); border-color: rgba(168,85,247,.4); color: #d8b4fe; }
+    .arch-box.user   { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); color: #fff; }
+    .arch-label      { font-size: 10px; color: var(--muted); }
+    .arch-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--muted);
+      font-size: 10px;
+      gap: 2px;
+    }
+    .arr-line { width: 2px; height: 30px; background: linear-gradient(to bottom, var(--accent), rgba(99,102,241,.2)); }
+    .arr-h { height: 2px; width: 40px; background: linear-gradient(90deg, rgba(99,102,241,.2), var(--accent)); }
+
+    .arch-side {
+      width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .arch-tech-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .arch-tech-card h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .tech-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tech-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+    }
+    .tech-badge.be   { background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+    .tech-badge.fe   { background: rgba(6,182,212,.1); border-color: rgba(6,182,212,.3); color: #67e8f9; }
+    .tech-badge.infra{ background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); color: #fcd34d; }
+    .tech-badge.mon  { background: rgba(249,115,22,.1); border-color: rgba(249,115,22,.3); color: #fdba74; }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 4 – Test Strategy
+    ══════════════════════════════════════════════ */
+    .s4 { background: var(--bg); flex-direction: column; }
+    .test-body {
+      flex: 1; padding: 20px 48px 28px;
+      display: flex; gap: 24px;
+    }
+    .pyramid-col {
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+    .pyramid-layer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      cursor: default;
+    }
+    .pyramid-block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 10px 0;
+      margin: 2px auto;
+      text-align: center;
+      transition: transform .2s;
+      letter-spacing: .5px;
+    }
+    .pyramid-block:hover { transform: scaleX(1.03); }
+    .pb-e2e   { width: 80%;  background: linear-gradient(135deg,rgba(99,102,241,.25),rgba(139,92,246,.25)); border: 1px solid rgba(99,102,241,.5); color: #a5b4fc; }
+    .pb-api   { width: 88%;  background: linear-gradient(135deg,rgba(6,182,212,.2),rgba(59,130,246,.2)); border: 1px solid rgba(6,182,212,.4); color: #67e8f9; }
+    .pb-integ { width: 95%;  background: linear-gradient(135deg,rgba(16,185,129,.2),rgba(5,150,105,.2)); border: 1px solid rgba(16,185,129,.4); color: #6ee7b7; }
+    .pb-unit  { width: 100%; background: linear-gradient(135deg,rgba(245,158,11,.2),rgba(217,119,6,.2)); border: 1px solid rgba(245,158,11,.4); color: #fcd34d; }
+    .pyramid-caption { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+    .test-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .test-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .test-card-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .test-card-body h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .test-card-body p  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .test-card-stat {
+      margin-left: auto;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .test-card-stat .num { font-size: 24px; font-weight: 800; line-height: 1; }
+    .test-card-stat .lbl { font-size: 10px; color: var(--muted); }
+
+    .coverage-bar-wrap {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 4px;
+    }
+    .coverage-bar-wrap h4 { font-size: 12px; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .coverage-bar-wrap h4 span { color: var(--green); }
+    .bar-track {
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--green), #34d399);
+      animation: growBar 1.2s cubic-bezier(.22,1,.36,1) forwards;
+    }
+    @keyframes growBar { from { width: 0 } }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 5 – CI/CD Pipeline
+    ══════════════════════════════════════════════ */
+    .s5 { background: var(--bg); flex-direction: column; }
+    .pipeline-body { flex: 1; padding: 20px 48px 28px; display: flex; flex-direction: column; gap: 18px; }
+    .pipeline-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 20px 24px;
+      overflow: hidden;
+    }
+    .pipe-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      text-align: center;
+    }
+    .pipe-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      border: 1px solid;
+      transition: transform .2s;
+    }
+    .pipe-icon:hover { transform: scale(1.1); }
+    .pipe-step h4 { font-size: 11px; font-weight: 700; letter-spacing: .5px; }
+    .pipe-step p  { font-size: 10px; color: var(--muted); }
+    .pipe-arrow { color: rgba(99,102,241,.6); font-size: 18px; flex-shrink: 0; margin: 0 4px; }
+    .pipe-lint  { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.4); }
+    .pipe-test  { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.4); }
+    .pipe-build { background: rgba(6,182,212,.1);  border-color: rgba(6,182,212,.4); }
+    .pipe-deploy{ background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.4); }
+    .pipe-smoke { background: rgba(99,102,241,.1); border-color: rgba(99,102,241,.4); }
+    .pipe-newman{ background: rgba(249,115,22,.1); border-color: rgba(249,115,22,.4); }
+    .pipe-e2e   { background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.4); }
+
+    .pipeline-details {
+      display: flex;
+      gap: 16px;
+    }
+    .pipe-detail-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .pipe-detail-card h4 { font-size: 12px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .pipe-detail-card ul { list-style: none; }
+    .pipe-detail-card li {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pipe-detail-card li:last-child { border-bottom: none; }
+    .pipe-detail-card li::before { content: '▸'; color: var(--accent); font-size: 10px; }
+    .code-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      background: rgba(99,102,241,.12);
+      border: 1px solid rgba(99,102,241,.25);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #a5b4fc;
+    }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 6 – Performance & Monitoring
+    ══════════════════════════════════════════════ */
+    .s6 { background: var(--bg); flex-direction: column; }
+    .perf-body { flex: 1; padding: 20px 48px 28px; display: flex; gap: 24px; }
+    .perf-left  { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .perf-right { width: 320px; display: flex; flex-direction: column; gap: 14px; }
+
+    .k6-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+    .k6-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .k6-stages {
+      display: flex;
+      align-items: flex-end;
+      height: 80px;
+      gap: 4px;
+      background: rgba(0,0,0,.3);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .k6-bar {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: height .3s;
+    }
+    .k6-bar.ramp1 { height: 30%; background: rgba(99,102,241,.5); }
+    .k6-bar.hold1 { height: 55%; background: rgba(99,102,241,.5); }
+    .k6-bar.hold1b{ height: 55%; background: rgba(99,102,241,.5); }
+    .k6-bar.hold1c{ height: 55%; background: rgba(99,102,241,.5); }
+    .k6-bar.ramp2 { height: 80%; background: rgba(139,92,246,.6); }
+    .k6-bar.peak1 { height: 100%; background: rgba(139,92,246,.7); }
+    .k6-bar.peak2 { height: 100%; background: rgba(139,92,246,.7); }
+    .k6-bar.down  { height: 40%; background: rgba(99,102,241,.3); }
+
+    .k6-metrics { display: flex; gap: 10px; }
+    .k6-metric {
+      flex: 1;
+      background: rgba(0,0,0,.2);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+    .k6-metric .val { font-size: 20px; font-weight: 800; color: var(--green); }
+    .k6-metric .lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .k6-metric.warn .val { color: var(--yellow); }
+    .k6-metric.good .val { color: var(--green); }
+
+    .threshold-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px 20px;
+    }
+    .threshold-card h3 { font-size: 12px; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .threshold-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 12px;
+    }
+    .threshold-row:last-child { border-bottom: none; }
+    .threshold-row .metric { color: var(--muted); }
+    .threshold-row .value  { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .threshold-row .status { font-size: 14px; }
+
+    .monitoring-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px 20px;
+      flex: 1;
+    }
+    .monitoring-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .panel-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 12px;
+    }
+    .panel-row:last-child { border-bottom: none; }
+    .panel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .mini-sparkline {
+      margin-left: auto;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 20px;
+    }
+    .spark-bar { width: 4px; border-radius: 2px; background: rgba(99,102,241,.5); }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 7 – Numbers & Lessons
+    ══════════════════════════════════════════════ */
+    .s7 { background: var(--bg); flex-direction: column; }
+    .numbers-body { flex: 1; padding: 20px 48px 28px; display: flex; gap: 24px; }
+    .numbers-grid { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color .2s, transform .2s;
+    }
+    .stat-card:hover { border-color: rgba(99,102,241,.4); transform: translateY(-2px); }
+    .stat-card .icon { font-size: 24px; }
+    .stat-card .big { font-size: 36px; font-weight: 900; line-height: 1; }
+    .stat-card .desc { font-size: 11px; color: var(--muted); }
+    .stat-card .tag-sm { font-size: 10px; margin-top: 4px; padding: 2px 8px; border-radius: 20px; display: inline-block; font-weight: 600; }
+
+    .lessons-col {
+      width: 300px;
+      background: linear-gradient(160deg, rgba(99,102,241,.08) 0%, rgba(139,92,246,.04) 100%);
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .lessons-col h3 { font-size: 13px; font-weight: 700; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+    .lesson-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .lesson-item:last-child { border-bottom: none; }
+    .lesson-num {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      background: rgba(99,102,241,.2);
+      border: 1px solid rgba(99,102,241,.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #a5b4fc;
+      flex-shrink: 0;
+    }
+    .lesson-text h4 { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+    .lesson-text p  { font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+    /* ══════════════════════════════════════════════
+       SLIDE 8 – Summary & Q&A
+    ══════════════════════════════════════════════ */
+    .s8 {
+      background: linear-gradient(135deg, #0a0e1a 0%, #0d1120 50%, #0a0e1a 100%);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .s8::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(99,102,241,.15) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 30% at 20% 80%, rgba(6,182,212,.08) 0%, transparent 50%),
+        radial-gradient(ellipse 30% 30% at 80% 20%, rgba(139,92,246,.08) 0%, transparent 50%);
+    }
+    .s8-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .s8-content { position: relative; z-index: 2; padding: 40px; width: 100%; }
+    .s8-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .s8-title {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #8b5cf6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 10px;
+    }
+    .s8-sub { font-size: 16px; color: var(--muted); margin-bottom: 36px; }
+    .s8-rubric {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 36px;
+    }
+    .rubric-item {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      padding: 16px 20px;
+      min-width: 130px;
+    }
+    .rubric-item .pts { font-size: 32px; font-weight: 900; line-height: 1; }
+    .rubric-item .pts.full { color: #10b981; }
+    .rubric-item .pts.bonus{ color: #f59e0b; }
+    .rubric-item .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .rubric-item .check { font-size: 18px; margin-top: 8px; }
+
+    .s8-links { display: flex; gap: 16px; justify-content: center; }
+    .link-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .2s;
+      cursor: pointer;
+    }
+    .link-pill:hover { background: var(--accent); border-color: var(--accent); }
+    .qa-badge {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      padding: 12px 24px;
+      border-radius: 40px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      animation: breathe 3s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%,100%{ box-shadow: 0 0 20px rgba(99,102,241,.4); }
+      50%    { box-shadow: 0 0 40px rgba(99,102,241,.8); }
+    }
+
+    /* ── Dots navigation ── */
+    .dots {
+      display: flex; gap: 8px; margin-top: 16px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .dot.active { background: var(--accent); width: 24px; border-radius: 4px; }
+
+    /* ── Key shortcut hint ── */
+    .hint { font-size: 11px; color: rgba(148,163,184,.35); margin-top: 10px; letter-spacing: .5px; }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <button id="prev-btn" onclick="changeSlide(-1)">← Geri</button>
+    <span class="slide-counter" id="counter">1 / 8</span>
+    <button id="next-btn" onclick="changeSlide(1)">İleri →</button>
+  </div>
+
+  <div class="slides-container">
+
+    <!-- ══════ SLIDE 1 – Title ══════ -->
+    <div class="slide s1 active" id="slide-1">
+      <div class="s1-grid"></div>
+      <div class="s1-content">
+        <div class="s1-tag"><span></span> MTH2526-B25 · Bulut Mimarilerinde Test Mühendisliği</div>
+        <div class="s1-title">QLink</div>
+        <div class="s1-subtitle">Cloud-Native QR Code Management Platform</div>
+        <div class="s1-chips">
+          <span class="chip accent">FastAPI + React</span>
+          <span class="chip accent">PostgreSQL + LocalStack S3</span>
+          <span class="chip accent">K8s + Helm + ArgoCD</span>
+          <span class="chip">63 Test · %70+ Coverage</span>
+          <span class="chip">200 VU · p95 &lt;500ms</span>
+          <span class="chip">7-Aşamalı CI/CD</span>
+        </div>
+        <div class="s1-team">
+          <div class="avatar-card">
+            <div class="avatar a1">MA</div>
+            <div class="avatar-info">
+              <div class="name">Merve Sueda Aydın</div>
+              <div class="role">Backend · DB · LocalStack · K8s · Helm · ArgoCD</div>
+            </div>
+          </div>
+          <div class="avatar-card">
+            <div class="avatar a2">ED</div>
+            <div class="avatar-info">
+              <div class="name">Elif Seda Demirhan</div>
+              <div class="role">UI · Unit/Integration · CI/CD · E2E · Monitoring · k6</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="s1-uni">Marmara Üniversitesi — Bilgisayar Mühendisliği — Konu #35 — 2025/2026 Bahar</div>
+      <div class="slide-badge">01 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 2 – Problem & Solution ══════ -->
+    <div class="slide s2" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(239,68,68,.12)">🎯</div>
+        <h2>Problem &amp; Çözüm</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="slide-body">
+        <div class="problem-col">
+          <div class="problem-card">
+            <div class="problem-icon" style="background:rgba(239,68,68,.1)">☁️</div>
+            <div>
+              <h3>Gerçek S3 Kullanamıyoruz</h3>
+              <p>AWS hesabı maliyet ve güvenlik riski yaratır. Lokal geliştirmede production ortamını simüle etmek şart.</p>
+            </div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon" style="background:rgba(245,158,11,.1)">🧪</div>
+            <div>
+              <h3>"Benim Makinemde Çalışıyordu"</h3>
+              <p>Veritabanı bağımlı testler izole ortam olmadan tutarsız sonuç verir; CI'da çöker.</p>
+            </div>
+          </div>
+          <div class="problem-card">
+            <div class="problem-icon" style="background:rgba(99,102,241,.1)">🔄</div>
+            <div>
+              <h3>Manuel Deploy Riskleri</h3>
+              <p>Her kodun otomatik test edilip dağıtılması, hata oranını ve geliştirme döngüsünü minimize eder.</p>
+            </div>
+          </div>
+        </div>
+        <div class="solution-col">
+          <h3>✅ Çözümlerimiz</h3>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#f59e0b"></div>
+            <span><strong>LocalStack</strong> — AWS S3 API'si lokal container'da</span>
+          </div>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#10b981"></div>
+            <span><strong>Testcontainers</strong> — Gerçek PostgreSQL, izole test ortamı</span>
+          </div>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#6366f1"></div>
+            <span><strong>moto[s3]</strong> — Unit testlerde S3 mock</span>
+          </div>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#06b6d4"></div>
+            <span><strong>GitHub Actions</strong> — 7 aşamalı otomatik pipeline</span>
+          </div>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#a855f7"></div>
+            <span><strong>Kubernetes + Helm</strong> — Deklaratif dağıtım</span>
+          </div>
+          <div class="sol-item">
+            <div class="sol-dot" style="background:#f97316"></div>
+            <span><strong>Prometheus + Grafana</strong> — Canlı gözlemlenebilirlik</span>
+          </div>
+          <div class="mission-box">
+            "Karmaşık bir uygulama yazmak değil — basit bir servis için <strong>endüstri standardı test ve dağıtım altyapısı</strong> kurmak."
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">02 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 3 – Architecture ══════ -->
+    <div class="slide s3" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(6,182,212,.12)">🏗️</div>
+        <h2>Sistem Mimarisi</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="arch-body">
+        <div class="arch-diagram">
+          <!-- Row: User -->
+          <div class="arch-row">
+            <div class="arch-node">
+              <div class="arch-box user">👤 Kullanıcı Tarayıcısı</div>
+            </div>
+          </div>
+          <div class="arch-arrow"><div class="arr-line"></div><span style="font-size:10px;color:var(--muted)">HTTP</span></div>
+          <!-- Row: Frontend -->
+          <div class="arch-row">
+            <div class="arch-node">
+              <div class="arch-box react">⚛️ React 18 + Vite 5 (nginx)</div>
+              <div class="arch-label">:3000</div>
+            </div>
+          </div>
+          <div class="arch-arrow"><div class="arr-line"></div><span style="font-size:10px;color:var(--muted)">REST API</span></div>
+          <!-- Row: Backend -->
+          <div class="arch-row">
+            <div class="arch-node">
+              <div class="arch-box fastapi">⚡ FastAPI (Python 3.12)</div>
+              <div class="arch-label">:8000</div>
+            </div>
+          </div>
+          <div class="arch-arrow">
+            <div style="display:flex;gap:60px;align-items:center">
+              <div class="arr-line" style="height:25px"></div>
+              <div class="arr-line" style="height:25px"></div>
+            </div>
+          </div>
+          <!-- Row: PG + S3 -->
+          <div class="arch-row" style="gap:32px">
+            <div class="arch-node">
+              <div class="arch-box pg">🐘 PostgreSQL 15</div>
+              <div class="arch-label">:5432</div>
+            </div>
+            <div class="arch-node">
+              <div class="arch-box s3">🪣 LocalStack S3</div>
+              <div class="arch-label">:4566</div>
+            </div>
+          </div>
+          <!-- Monitoring row -->
+          <div style="position:absolute;bottom:16px;display:flex;gap:10px;z-index:2">
+            <div class="arch-box prom" style="font-size:10px;padding:6px 12px">📊 Prometheus :9090</div>
+            <div class="arch-box graf" style="font-size:10px;padding:6px 12px">📈 Grafana :3001</div>
+            <div class="arch-box jaeg" style="font-size:10px;padding:6px 12px">🔭 Jaeger :16686</div>
+          </div>
+        </div>
+        <div class="arch-side">
+          <div class="arch-tech-card">
+            <h4>🖥️ Backend</h4>
+            <div class="tech-list">
+              <span class="tech-badge be">FastAPI</span>
+              <span class="tech-badge be">Python 3.12</span>
+              <span class="tech-badge be">SQLAlchemy</span>
+              <span class="tech-badge be">Pydantic</span>
+              <span class="tech-badge be">JWT + bcrypt</span>
+              <span class="tech-badge be">boto3</span>
+            </div>
+          </div>
+          <div class="arch-tech-card">
+            <h4>🎨 Frontend</h4>
+            <div class="tech-list">
+              <span class="tech-badge fe">React 18</span>
+              <span class="tech-badge fe">Vite 5</span>
+              <span class="tech-badge fe">React Router v6</span>
+              <span class="tech-badge fe">axios</span>
+              <span class="tech-badge fe">nginx</span>
+            </div>
+          </div>
+          <div class="arch-tech-card">
+            <h4>⚙️ Altyapı</h4>
+            <div class="tech-list">
+              <span class="tech-badge infra">Docker</span>
+              <span class="tech-badge infra">K8s / Minikube</span>
+              <span class="tech-badge infra">Helm</span>
+              <span class="tech-badge infra">ArgoCD</span>
+              <span class="tech-badge infra">LocalStack</span>
+            </div>
+          </div>
+          <div class="arch-tech-card">
+            <h4>📡 Gözlemlenebilirlik</h4>
+            <div class="tech-list">
+              <span class="tech-badge mon">Prometheus</span>
+              <span class="tech-badge mon">Grafana</span>
+              <span class="tech-badge mon">OpenTelemetry</span>
+              <span class="tech-badge mon">Jaeger</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">03 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 4 – Test Strategy ══════ -->
+    <div class="slide s4" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(245,158,11,.12)">🧪</div>
+        <h2>Test Stratejisi</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="test-body">
+        <div class="pyramid-col">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Test Piramidi</div>
+          <div class="pyramid-layer">
+            <div class="pyramid-block pb-e2e">🎭 E2E (Playwright)</div>
+            <div class="pyramid-caption">6 senaryo</div>
+          </div>
+          <div class="pyramid-layer">
+            <div class="pyramid-block pb-api">📬 API (Newman)</div>
+            <div class="pyramid-caption">14 istek · 27 assertion</div>
+          </div>
+          <div class="pyramid-layer">
+            <div class="pyramid-block pb-integ">🔗 Integration (Testcontainers)</div>
+            <div class="pyramid-caption">20+ test</div>
+          </div>
+          <div class="pyramid-layer">
+            <div class="pyramid-block pb-unit">⚡ Unit (Pytest + moto)</div>
+            <div class="pyramid-caption">43 test</div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);text-align:center">+ Performans: k6 · 200 VU</div>
+        </div>
+        <div class="test-details">
+          <div class="test-card">
+            <div class="test-card-icon" style="background:rgba(245,158,11,.12)">⚡</div>
+            <div class="test-card-body">
+              <h3>Unit Testler — moto[s3]</h3>
+              <p>auth, qr_service, s3_service, schemas katmanları. S3 bağımlılığı moto ile mock'landı. Docker gerekmez.</p>
+            </div>
+            <div class="test-card-stat">
+              <div class="num" style="color:#f59e0b">43</div>
+              <div class="lbl">test</div>
+            </div>
+          </div>
+          <div class="test-card">
+            <div class="test-card-icon" style="background:rgba(16,185,129,.12)">🔗</div>
+            <div class="test-card-body">
+              <h3>Integration — Testcontainers</h3>
+              <p>Gerçek PostgreSQL container'ı test anında ayağa kalkar. Factory Boy + Faker ile dinamik test verisi. "Benim makinemde çalışıyordu" yok.</p>
+            </div>
+            <div class="test-card-stat">
+              <div class="num" style="color:#10b981">20+</div>
+              <div class="lbl">test</div>
+            </div>
+          </div>
+          <div class="test-card">
+            <div class="test-card-icon" style="background:rgba(168,85,247,.12)">🎭</div>
+            <div class="test-card-body">
+              <h3>E2E — Playwright Chromium</h3>
+              <p>Kayıt / Giriş, QR oluştur, PNG indir, geçmiş görüntüle. Gerçek tarayıcıda uçtan uca doğrulama.</p>
+            </div>
+            <div class="test-card-stat">
+              <div class="num" style="color:#a855f7">6</div>
+              <div class="lbl">senaryo</div>
+            </div>
+          </div>
+          <div class="coverage-bar-wrap">
+            <h4>Kod Kapsamı (Coverage) <span>≥ %70 Gate ✅</span></h4>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:74%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">04 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 5 – CI/CD Pipeline ══════ -->
+    <div class="slide s5" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(16,185,129,.12)">🔄</div>
+        <h2>CI/CD Pipeline — GitHub Actions</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="pipeline-body">
+        <div class="pipeline-flow">
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-lint">🔍</div>
+            <h4>1 · Lint</h4>
+            <p>ruff + eslint</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-test">🧪</div>
+            <h4>2+3 · Test</h4>
+            <p>Pytest + %70 gate</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-build">🐳</div>
+            <h4>4 · Build</h4>
+            <p>Multi-stage Docker</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-deploy">🚀</div>
+            <h4>5 · Deploy</h4>
+            <p>docker-compose up</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-smoke">💨</div>
+            <h4>6 · Smoke</h4>
+            <p>/health + /metrics</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-newman">📬</div>
+            <h4>6 · Newman</h4>
+            <p>14 istek · 27 assert</p>
+          </div>
+          <div class="pipe-arrow">›</div>
+          <div class="pipe-step">
+            <div class="pipe-icon pipe-e2e">🎭</div>
+            <h4>7 · E2E</h4>
+            <p>Playwright</p>
+          </div>
+        </div>
+        <div class="pipeline-details">
+          <div class="pipe-detail-card">
+            <h4>🐳 Multi-Stage Dockerfile</h4>
+            <ul>
+              <li><strong>Stage 1 (builder):</strong> pip bağımlılıklarını derle</li>
+              <li><strong>Stage 2 (runtime):</strong> python-slim, sadece wheel'lar kopyalanır</li>
+              <li>Küçük imaj boyutu → düşük saldırı yüzeyi</li>
+              <li>Aynı pattern frontend (node build → nginx) için</li>
+            </ul>
+          </div>
+          <div class="pipe-detail-card">
+            <h4>☸️ Kubernetes Dağıtımı</h4>
+            <ul>
+              <li>Minikube üzerinde <span class="code-tag">kubectl apply</span> ile deploy</li>
+              <li>Helm Chart ile template yönetimi <span class="code-tag">+5 bonus</span></li>
+              <li>ArgoCD GitOps — git push = otomatik senkronizasyon <span class="code-tag">+5 bonus</span></li>
+              <li>ConfigMap ile environment ayrımı</li>
+            </ul>
+          </div>
+          <div class="pipe-detail-card">
+            <h4>🔭 OpenTelemetry Bonus</h4>
+            <ul>
+              <li>FastAPI'ye OTel middleware entegrasyonu <span class="code-tag">+5 bonus</span></li>
+              <li>Jaeger'a trace export (:16686)</li>
+              <li><span class="code-tag">OTEL_ENABLED=true</span> ile aktifleşir</li>
+              <li>Her endpoint distributed trace görünür</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">05 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 6 – Performance & Monitoring ══════ -->
+    <div class="slide s6" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(249,115,22,.12)">📊</div>
+        <h2>Performans &amp; Gözlemlenebilirlik</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="perf-body">
+        <div class="perf-left">
+          <div class="k6-card">
+            <h3>📈 k6 Yük Testi — Aşamalı Profil</h3>
+            <div class="k6-stages">
+              <div class="k6-bar ramp1"  title="0→100 VU (1dk)"></div>
+              <div class="k6-bar hold1"  title="100 VU (1dk)"></div>
+              <div class="k6-bar hold1b" title="100 VU (1dk)"></div>
+              <div class="k6-bar hold1c" title="100 VU (1dk)"></div>
+              <div class="k6-bar ramp2"  title="100→200 VU (1dk)"></div>
+              <div class="k6-bar peak1"  title="200 VU (1dk)"></div>
+              <div class="k6-bar peak2"  title="200 VU (1dk)"></div>
+              <div class="k6-bar down"   title="200→0 VU (1dk)"></div>
+            </div>
+            <div class="k6-metrics">
+              <div class="k6-metric good"><div class="val">200</div><div class="lbl">Max VU</div></div>
+              <div class="k6-metric good"><div class="val">~8dk</div><div class="lbl">Toplam Süre</div></div>
+              <div class="k6-metric good"><div class="val">&lt;5%</div><div class="lbl">Hata Oranı</div></div>
+              <div class="k6-metric good"><div class="val">~75/s</div><div class="lbl">Throughput</div></div>
+            </div>
+          </div>
+          <div class="threshold-card">
+            <h3>🎯 Threshold Sonuçları</h3>
+            <div class="threshold-row">
+              <span class="metric">p95 Latency</span>
+              <span class="value" style="color:#6ee7b7">~200-350ms</span>
+              <span class="status">✅</span>
+            </div>
+            <div class="threshold-row">
+              <span class="metric">Hedef p95</span>
+              <span class="value" style="color:#94a3b8">&lt; 500ms</span>
+              <span class="status">🎯</span>
+            </div>
+            <div class="threshold-row">
+              <span class="metric">p50 Latency</span>
+              <span class="value" style="color:#6ee7b7">~80-150ms</span>
+              <span class="status">✅</span>
+            </div>
+            <div class="threshold-row">
+              <span class="metric">HTTP Hata Oranı</span>
+              <span class="value" style="color:#6ee7b7">&lt;%1</span>
+              <span class="status">✅</span>
+            </div>
+            <div class="threshold-row">
+              <span class="metric">/health p95</span>
+              <span class="value" style="color:#6ee7b7">&lt;100ms</span>
+              <span class="status">✅</span>
+            </div>
+          </div>
+        </div>
+        <div class="perf-right">
+          <div class="monitoring-card">
+            <h3>📡 Prometheus + Grafana</h3>
+            <div class="panel-row">
+              <div class="panel-dot" style="background:#6366f1"></div>
+              <div>
+                <div style="font-weight:600">Request Latency</div>
+                <div style="font-size:10px;color:var(--muted)">histogram_quantile p50/p95/p99</div>
+              </div>
+              <div class="mini-sparkline">
+                <div class="spark-bar" style="height:40%"></div>
+                <div class="spark-bar" style="height:60%"></div>
+                <div class="spark-bar" style="height:80%"></div>
+                <div class="spark-bar" style="height:100%"></div>
+                <div class="spark-bar" style="height:70%"></div>
+                <div class="spark-bar" style="height:50%"></div>
+              </div>
+            </div>
+            <div class="panel-row">
+              <div class="panel-dot" style="background:#ef4444"></div>
+              <div>
+                <div style="font-weight:600">Error Rate</div>
+                <div style="font-size:10px;color:var(--muted)">4xx/5xx oranı (hedef &lt;%5)</div>
+              </div>
+              <div class="mini-sparkline">
+                <div class="spark-bar" style="height:10%;background:rgba(239,68,68,.5)"></div>
+                <div class="spark-bar" style="height:5%;background:rgba(239,68,68,.5)"></div>
+                <div class="spark-bar" style="height:8%;background:rgba(239,68,68,.5)"></div>
+                <div class="spark-bar" style="height:3%;background:rgba(239,68,68,.5)"></div>
+                <div class="spark-bar" style="height:6%;background:rgba(239,68,68,.5)"></div>
+                <div class="spark-bar" style="height:4%;background:rgba(239,68,68,.5)"></div>
+              </div>
+            </div>
+            <div class="panel-row">
+              <div class="panel-dot" style="background:#10b981"></div>
+              <div>
+                <div style="font-weight:600">Throughput</div>
+                <div style="font-size:10px;color:var(--muted)">2xx req/saniye başarı oranı</div>
+              </div>
+              <div class="mini-sparkline">
+                <div class="spark-bar" style="height:50%;background:rgba(16,185,129,.5)"></div>
+                <div class="spark-bar" style="height:70%;background:rgba(16,185,129,.5)"></div>
+                <div class="spark-bar" style="height:90%;background:rgba(16,185,129,.5)"></div>
+                <div class="spark-bar" style="height:100%;background:rgba(16,185,129,.5)"></div>
+                <div class="spark-bar" style="height:85%;background:rgba(16,185,129,.5)"></div>
+                <div class="spark-bar" style="height:75%;background:rgba(16,185,129,.5)"></div>
+              </div>
+            </div>
+          </div>
+          <div class="arch-tech-card" style="flex:1;">
+            <h4>🔭 OpenTelemetry Tracing</h4>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
+              Her HTTP isteğinin baştan sona distributed trace'i Jaeger'a gönderilir. Servisler arası gecikme analizi yapılabilir.
+            </div>
+            <div class="tech-list">
+              <span class="tech-badge mon">OTel SDK</span>
+              <span class="tech-badge mon">Jaeger :16686</span>
+              <span class="tech-badge mon">OTLP Export</span>
+            </div>
+          </div>
+          <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:12px 14px;">
+            <div style="font-size:11px;font-weight:700;color:#fcd34d;margin-bottom:6px;">⚠️ Darboğaz Analizi</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.5;">
+              QR üretimi CPU-bound · pool_size=5 darboğaz oluşturabilir · S3 yükleme ~10-30ms ekler
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">06 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 7 – Numbers & Lessons ══════ -->
+    <div class="slide s7" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-header-icon" style="background:rgba(16,185,129,.12)">🏆</div>
+        <h2>Sayılarla QLink &amp; Öğrendiklerimiz</h2>
+        <div class="accent-line"></div>
+      </div>
+      <div class="numbers-body">
+        <div class="numbers-grid">
+          <div class="stat-card">
+            <div class="icon">⚡</div>
+            <div class="big" style="color:#f59e0b">43</div>
+            <div class="desc">Unit Test</div>
+            <div class="tag-sm" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fcd34d">Pytest + moto[s3]</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">🔗</div>
+            <div class="big" style="color:#10b981">20+</div>
+            <div class="desc">Integration Test</div>
+            <div class="tag-sm" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#6ee7b7">Testcontainers</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">🎭</div>
+            <div class="big" style="color:#a855f7">6</div>
+            <div class="desc">E2E Senaryo</div>
+            <div class="tag-sm" style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);color:#d8b4fe">Playwright</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">📬</div>
+            <div class="big" style="color:#f97316">27</div>
+            <div class="desc">API Assertion</div>
+            <div class="tag-sm" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:#fdba74">Newman · 14 istek</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">📊</div>
+            <div class="big" style="color:#6366f1">%70+</div>
+            <div class="desc">Code Coverage</div>
+            <div class="tag-sm" style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">CI gate ✅</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">🚀</div>
+            <div class="big" style="color:#06b6d4">200</div>
+            <div class="desc">Max VU (k6)</div>
+            <div class="tag-sm" style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);color:#67e8f9">p95 &lt;500ms ✅</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">🔄</div>
+            <div class="big" style="color:#10b981">7</div>
+            <div class="desc">Pipeline Aşaması</div>
+            <div class="tag-sm" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:#6ee7b7">GitHub Actions</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">🎁</div>
+            <div class="big" style="color:#f59e0b">+15</div>
+            <div class="desc">Bonus Puan</div>
+            <div class="tag-sm" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fcd34d">Helm+ArgoCD+OTel</div>
+          </div>
+          <div class="stat-card">
+            <div class="icon">📡</div>
+            <div class="big" style="color:#f97316">3</div>
+            <div class="desc">Grafana Panel</div>
+            <div class="tag-sm" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:#fdba74">Latency·Error·Thput</div>
+          </div>
+        </div>
+        <div class="lessons-col">
+          <h3>💡 Öğrendiklerimiz</h3>
+          <div class="lesson-item">
+            <div class="lesson-num">1</div>
+            <div class="lesson-text">
+              <h4>Testcontainers Gücü</h4>
+              <p>Başlangıç maliyeti yüksek ama integration testlerde DB hatalarını sıfıra indiriyor.</p>
+            </div>
+          </div>
+          <div class="lesson-item">
+            <div class="lesson-num">2</div>
+            <div class="lesson-text">
+              <h4>Multi-Stage Build</h4>
+              <p>İmaj boyutu küçülür, saldırı yüzeyi azalır; güvenlik ve boyut optimizasyonu tek hamlede.</p>
+            </div>
+          </div>
+          <div class="lesson-item">
+            <div class="lesson-num">3</div>
+            <div class="lesson-text">
+              <h4>Pipeline &gt; Kod Yazmak</h4>
+              <p>Uçtan uca pipeline kurmak, özellik geliştirmekten çok daha meşakkatli ama değerli.</p>
+            </div>
+          </div>
+          <div class="lesson-item">
+            <div class="lesson-num">4</div>
+            <div class="lesson-text">
+              <h4>LocalStack → AWS</h4>
+              <p>endpoint_url kaldırılınca sistem gerçek S3'te çalışmaya hazır; sıfır kod değişikliği.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-badge">07 / 08</div>
+    </div>
+
+    <!-- ══════ SLIDE 8 – Summary & Q&A ══════ -->
+    <div class="slide s8" id="slide-8">
+      <div class="s8-grid"></div>
+      <div class="s8-content">
+        <span class="s8-icon">🔗</span>
+        <div class="s8-title">QLink — Özet</div>
+        <div class="s8-sub">Basit uygulama, endüstri standardı test &amp; dağıtım altyapısı</div>
+        <div class="s8-rubric">
+          <div class="rubric-item">
+            <div class="pts full">20</div>
+            <div class="lbl">Repo + Coverage</div>
+            <div class="check">✅</div>
+          </div>
+          <div class="rubric-item">
+            <div class="pts full">15</div>
+            <div class="lbl">Test Çeşitliliği</div>
+            <div class="check">✅</div>
+          </div>
+          <div class="rubric-item">
+            <div class="pts full">15</div>
+            <div class="lbl">CI/CD Pipeline</div>
+            <div class="check">✅</div>
+          </div>
+          <div class="rubric-item">
+            <div class="pts full">15</div>
+            <div class="lbl">Container + K8s</div>
+            <div class="check">✅</div>
+          </div>
+          <div class="rubric-item">
+            <div class="pts full">15</div>
+            <div class="lbl">AWS + Mon + Perf</div>
+            <div class="check">✅</div>
+          </div>
+          <div class="rubric-item" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)">
+            <div class="pts bonus">+15</div>
+            <div class="lbl">Bonus Puanlar</div>
+            <div class="check">🎁</div>
+          </div>
+        </div>
+        <div class="s8-links">
+          <div class="link-pill">⚛️ localhost:3000 — Frontend</div>
+          <div class="link-pill">⚡ localhost:8000/docs — Swagger</div>
+          <div class="link-pill">📊 localhost:3001 — Grafana</div>
+          <div class="link-pill">📈 localhost:9090 — Prometheus</div>
+        </div>
+      </div>
+      <div class="qa-badge">❓ Sorularınız?</div>
+      <div class="slide-badge">08 / 08</div>
+    </div>
+
+  </div><!-- /slides-container -->
+
+  <div class="dots" id="dots"></div>
+  <div class="hint">← → tuşları veya butonları ile gezin · Toplam 8 slayt</div>
+
+  <script>
+    let current = 1;
+    const total = 8;
+
+    // Build dots
+    const dotsEl = document.getElementById('dots');
+    for (let i = 1; i <= total; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 1 ? ' active' : '');
+      d.onclick = () => goTo(i);
+      dotsEl.appendChild(d);
+    }
+
+    function goTo(n) {
+      document.getElementById('slide-' + current).classList.remove('active');
+      dotsEl.children[current - 1].classList.remove('active');
+      current = Math.max(1, Math.min(total, n));
+      document.getElementById('slide-' + current).classList.add('active');
+      dotsEl.children[current - 1].classList.add('active');
+      document.getElementById('counter').textContent = current + ' / ' + total;
+    }
+
+    function changeSlide(dir) { goTo(current + dir); }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+    });
+  </script>
+</body>
+</html>

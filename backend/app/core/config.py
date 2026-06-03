@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # --- Veritabanı ---
-    DATABASE_URL: str = "postgresql://qlink:qlink@localhost:5432/qlink"
+    DATABASE_URL: str = "postgresql+psycopg://qlink:qlink@localhost:5432/qlink"
 
     # --- LocalStack / S3 ---
     AWS_ENDPOINT_URL: str = "http://localhost:4566"
