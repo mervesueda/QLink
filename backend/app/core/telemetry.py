@@ -13,6 +13,11 @@ def setup_tracing(app) -> None:
     """
     OpenTelemetry FastAPI instrumentasyonunu başlatır.
     settings.OTEL_ENABLED=True olmadan çağrılsa bile sessizce atlar.
+
+    NOT: opentelemetry-exporter-otlp-proto-grpc >= 1.21.0 sürümünde
+    `insecure` parametresi OTLPSpanExporter'dan kaldırıldı.
+    gRPC endpoint'i http:// ile başladığında SDK otomatik olarak
+    insecure kanal (credentials=None) kullanır. Kök neden buydu.
     """
     if not settings.OTEL_ENABLED:
         return
@@ -29,8 +34,9 @@ def setup_tracing(app) -> None:
         resource = Resource.create({"service.name": settings.OTEL_SERVICE_NAME})
         provider = TracerProvider(resource=resource)
 
-        # Span'ları OTLP üzerinden Jaeger/Tempo'ya gönder
-        exporter = OTLPSpanExporter(endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT, insecure=True)
+        # Span'ları OTLP gRPC üzerinden Jaeger'a gönder.
+        # insecure=True kaldırıldı — http:// endpoint otomatik insecure kanal açar.
+        exporter = OTLPSpanExporter(endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT)
         provider.add_span_processor(BatchSpanProcessor(exporter))
 
         trace.set_tracer_provider(provider)
@@ -39,5 +45,8 @@ def setup_tracing(app) -> None:
         FastAPIInstrumentor.instrument_app(app, tracer_provider=provider)
 
         print(f"[OTel] Tracing aktif → {settings.OTEL_EXPORTER_OTLP_ENDPOINT}")
-    except ImportError:
-        print("[OTel] opentelemetry paketleri bulunamadı, tracing devre dışı.")
+    except ImportError as e:
+        print(f"[OTel] opentelemetry paketleri bulunamadı, tracing devre dışı: {e}")
+    except Exception as e:
+        # TypeError veya AttributeError gibi runtime hatalarını yakala
+        print(f"[OTel] Tracing başlatılamadı (runtime hata): {e}")

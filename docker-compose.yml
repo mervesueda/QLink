@@ -99,7 +99,9 @@ services:
       # Docker Compose'da backend servis adı 'backend'dir.
       BACKEND_HOST: backend
     ports:
-      - "3000:80"
+      # KÖK NEDEN DÜZELTMESİ: Windows Hyper-V/WSL2, 2586-3186 port aralığını
+      # dynamic reservation ile kilitler. 3200 güvenli aralıkta.
+      - "3200:80"
     depends_on:
       - backend
     restart: unless-stopped
@@ -131,7 +133,8 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     ports:
-      - "3001:3000"
+      # Grafana iç portu 3000, host'a 3300 olarak açılır (3001 Windows tarafından kilitli)
+      - "3300:3000"
     depends_on:
       - prometheus
     restart: unless-stopped

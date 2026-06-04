@@ -207,6 +207,10 @@ def delete_qr(
     """
     QR'ı hem veritabanından hem S3'ten siler.
     Başka kullanıcının QR'ı 404 ile engellenir.
+
+    KÖK NEDEN DÜZELTMESİ: S3 yüklemesi başarısız olduğunda file_url
+    "/qr/image/{object_key}" fallback formatında saklanır.
+    Her iki URL formatından da object_key doğru parse edilir.
     """
     qr_code = (
         db.query(QRCode)
@@ -216,9 +220,13 @@ def delete_qr(
     if not qr_code:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="QR bulunamadı")
 
-    # S3'ten dosyayı temizle
-    object_key = qr_code.file_url.split("/")[-1]
-    delete_from_s3(object_key)
+    # S3'ten dosyayı temizle — her iki URL formatını da destekle:
+    # Format 1: http://localhost:4566/qlink-qrcodes/qr_abc123.png  → split[-1] = qr_abc123.png
+    # Format 2: /qr/image/qr_abc123.png (fallback)                → split[-1] = qr_abc123.png
+    # Her iki durumda da [-1] doğru object_key'i verir.
+    object_key = qr_code.file_url.rstrip("/").split("/")[-1]
+    if object_key:
+        delete_from_s3(object_key)
 
     db.delete(qr_code)
     db.commit()

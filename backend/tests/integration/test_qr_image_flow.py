@@ -8,7 +8,6 @@ integration/test_qr_image_flow.py – QR görsel indirme ve önizleme akış tes
 """
 
 from io import BytesIO
-
 from PIL import Image
 
 
@@ -18,8 +17,10 @@ def _register_and_login(client, email: str, password: str = "Secure123!") -> str
     resp = client.post("/auth/login", json={"email": email, "password": password})
     return resp.json()["access_token"]
 
+
 def _auth_header(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
+
 
 class TestQRImageFlow:
     """QR Görsel ve İndirme Akış Testleri."""
@@ -61,7 +62,7 @@ class TestQRImageFlow:
         img_resp = client.get(f"/qr/{qr_id}/image?download=true", headers=_auth_header(token))
         assert img_resp.status_code == 200
         assert "attachment" in img_resp.headers["content-disposition"]
-        assert f"filename=\"qlink-{qr_id}.png\"" in img_resp.headers["content-disposition"]
+        assert f'filename="qlink-{qr_id}.png"' in img_resp.headers["content-disposition"]
 
     def test_qr_image_requires_auth(self, client, mock_s3):
         """Image endpoint'inin token gerektirdiğini doğrula."""
@@ -99,8 +100,12 @@ class TestQRImageFlow:
         token = _register_and_login(client, "list_image_flow@example.com")
 
         # İki farklı QR oluştur
-        client.post("/qr/create", json={"content": "URL1", "qr_type": "text"}, headers=_auth_header(token))
-        client.post("/qr/create", json={"content": "URL2", "qr_type": "text"}, headers=_auth_header(token))
+        client.post(
+            "/qr/create", json={"content": "URL1", "qr_type": "text"}, headers=_auth_header(token)
+        )
+        client.post(
+            "/qr/create", json={"content": "URL2", "qr_type": "text"}, headers=_auth_header(token)
+        )
 
         # Listeyi al
         list_resp = client.get("/qr/list", headers=_auth_header(token))
@@ -122,4 +127,3 @@ class TestQRImageFlow:
             headers={"Authorization": "Bearer invalid_or_expired_token_here"},
         )
         assert response.status_code == 401
-

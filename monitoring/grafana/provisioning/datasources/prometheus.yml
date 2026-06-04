@@ -1,14 +1,21 @@
 # monitoring/grafana/provisioning/datasources/prometheus.yml
 # Grafana başladığında bu dosyayı okuyarak Prometheus data source'unu otomatik ekler.
 # Manuel "Add data source" adımına gerek kalmaz.
+#
+# KÖK NEDEN DÜZELTMESİ: uid alanı eklendi.
+# Dashboard JSON içindeki datasource uid'lerin bu uid ile eşleşmesi gerekir.
+# PBFA97CFB590B2093 = Grafana'nın provisioned Prometheus datasource'u için sabit UID.
 
 apiVersion: 1
 
 datasources:
   - name: Prometheus
     type: prometheus
+    uid: PBFA97CFB590B2093
     access: proxy
     # docker-compose ağında prometheus servis adı
     url: http://prometheus:9090
     isDefault: true
     editable: false
+    jsonData:
+      timeInterval: "15s"

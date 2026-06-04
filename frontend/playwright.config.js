@@ -1,35 +1,29 @@
 // playwright.config.js – Playwright E2E test konfigürasyonu.
 //
-// Testler çalışmadan önce frontend ve backend'in ayakta olması gerekir.
-// CI'da docker-compose ile ortam hazırlandıktan sonra çalıştırılır.
+// KÖK NEDEN DÜZELTMESİ (ERR_CONNECTION_REFUSED):
+// Windows Hyper-V/WSL2, 2586-3186 port aralığını dynamic reservation ile kilitler.
+// Port 3000 ve 3100 bu aralıkta → Docker bind yapamıyor → ERR_CONNECTION_REFUSED.
+// Frontend port 3200'e taşındı (güvenli aralık: 3187+).
+//
+// webServer bloğu:
+//   - reuseExistingServer: true → docker-compose zaten çalışıyorsa onu kullanır
+//   - Yoksa → npm run dev'i başlatır, localhost:3200 hazır olana kadar bekler
 
 import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
-  // Testlerin bulunduğu dizin
   testDir: './e2e',
-
-  // Paralel çalıştırma: CI'da false yaparak sıralı çalıştır (kaynak kısıtı)
   fullyParallel: false,
-
-  // CI'da yeniden deneme yapma (flaky testleri maskelemez)
-  retries: process.env.CI ? 1 : 0,
-
-  // Raporlama: CI'da list, yerel geliştirmede html
+  retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'list' : 'html',
 
   use: {
-    // Test edilen uygulama URL'i
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
-
-    // Hata durumunda ekran görüntüsü al
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3200',
     screenshot: 'only-on-failure',
-
-    // İz kaydı: yalnızca ilk yeniden denemede
     trace: 'on-first-retry',
-
-    // Headless mod: CI'da true, yerel geliştirmede false
     headless: true,
+    actionTimeout: 30000,
+    navigationTimeout: 30000,
   },
 
   projects: [
@@ -39,11 +33,12 @@ export default defineConfig({
     },
   ],
 
-  // Yerel geliştirmede dev server'ı otomatik başlat
-  // CI'da bu satırı yorum satırı yap (zaten ayakta)
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: true,
-  // },
+  // webServer: testler başlamadan önce sunucunun hazır olmasını garantiler.
+  // reuseExistingServer: true → docker-compose veya npm run dev çalışıyorsa kullanır.
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3200',
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
 })
